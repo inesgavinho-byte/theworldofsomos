@@ -45,6 +45,54 @@ export default async function AdminPage() {
     { href: "/admin/estatisticas", label: "Estatísticas", desc: "Métricas de uso e engagement" },
   ];
 
+  const ROUTE_GROUPS = [
+    {
+      tipo: "Pública",
+      cor: "#4ade80",
+      corFundo: "rgba(74,222,128,0.1)",
+      rotas: [
+        { path: "/", dinamica: false },
+        { path: "/login", dinamica: false },
+        { path: "/register", dinamica: false },
+        { path: "/leituras", dinamica: false },
+        { path: "/leituras/[slug]", dinamica: true },
+      ],
+    },
+    {
+      tipo: "Pai",
+      cor: "#60a5fa",
+      corFundo: "rgba(96,165,250,0.1)",
+      rotas: [
+        { path: "/dashboard", dinamica: false },
+        { path: "/onboarding", dinamica: false },
+      ],
+    },
+    {
+      tipo: "Criança",
+      cor: "#facc15",
+      corFundo: "rgba(250,204,21,0.1)",
+      rotas: [
+        { path: "/crianca/login", dinamica: false },
+        { path: "/crianca/dashboard", dinamica: false },
+        { path: "/licao/[slug]", dinamica: true },
+        { path: "/licao/[slug]/conteudo", dinamica: true },
+        { path: "/licao/[slug]/exercicios", dinamica: true },
+        { path: "/licao/[slug]/reflexao", dinamica: true },
+      ],
+    },
+    {
+      tipo: "Admin",
+      cor: "#a78bfa",
+      corFundo: "rgba(167,139,250,0.1)",
+      rotas: [
+        { path: "/admin", dinamica: false },
+        { path: "/admin/utilizadores", dinamica: false },
+        { path: "/admin/conteudo", dinamica: false },
+        { path: "/admin/estatisticas", dinamica: false },
+      ],
+    },
+  ];
+
   return (
     <div
       style={{
@@ -194,6 +242,122 @@ export default async function AdminPage() {
               </div>
             </Link>
           ))}
+        </div>
+
+        {/* Route Map */}
+        <div style={{ marginBottom: "28px" }}>
+          <h2
+            className="font-editorial"
+            style={{ fontSize: "24px", fontWeight: 500, marginBottom: "20px" }}
+          >
+            Mapa de Rotas
+          </h2>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {ROUTE_GROUPS.map((group) => (
+              <div key={group.tipo}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <span
+                    style={{
+                      background: group.corFundo,
+                      color: group.cor,
+                      border: `1px solid ${group.cor}60`,
+                      borderRadius: "6px",
+                      padding: "3px 10px",
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase" as const,
+                    }}
+                  >
+                    {group.tipo}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--texto-secundario)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {group.rotas.length} rota{group.rotas.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))",
+                    gap: "10px",
+                  }}
+                >
+                  {group.rotas.map((rota) => {
+                    const card = (
+                      <div
+                        className={rota.dinamica ? "" : "card-hover"}
+                        style={{
+                          background: "rgba(245,242,236,0.9)",
+                          borderRadius: "12px",
+                          padding: "14px 16px",
+                          border: rota.dinamica
+                            ? "1.5px dashed rgba(160,144,128,0.3)"
+                            : "1px solid rgba(160,144,128,0.15)",
+                          opacity: rota.dinamica ? 0.55 : 1,
+                          cursor: rota.dinamica ? "default" : "none",
+                        }}
+                      >
+                        <code
+                          style={{
+                            fontSize: "12px",
+                            fontFamily: "monospace",
+                            color: rota.dinamica
+                              ? "var(--texto-secundario)"
+                              : "var(--texto-principal)",
+                            display: "block",
+                            marginBottom: "10px",
+                            wordBreak: "break-all" as const,
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {rota.path}
+                        </code>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            background: group.corFundo,
+                            color: group.cor,
+                            border: `1px solid ${group.cor}50`,
+                            borderRadius: "4px",
+                            padding: "2px 8px",
+                            fontSize: "10px",
+                            fontWeight: 800,
+                            letterSpacing: "0.06em",
+                            textTransform: "uppercase" as const,
+                          }}
+                        >
+                          {group.tipo}
+                        </span>
+                      </div>
+                    );
+
+                    return rota.dinamica ? (
+                      <div key={rota.path}>{card}</div>
+                    ) : (
+                      <Link key={rota.path} href={rota.path}>
+                        {card}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* SQL helper info */}
