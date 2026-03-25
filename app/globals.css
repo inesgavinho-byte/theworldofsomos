@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Nunito:wght@600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Backgrounds */
+  --fundo-pai: #ede9e1;
+  --fundo-crianca: #f5f2ec;
+  --card-surface: #f5f2ec;
+  --texto-principal: #1a1714;
+  --texto-secundario: #a09080;
+
+  /* Dimensão: Identitária (roxo) */
+  --roxo-tint: #a78bfa;
+  --roxo-texto: #534ab7;
+  --roxo-card: #2a2250;
+
+  /* Dimensão: Naturalista (verde) */
+  --verde-tint: #4ade80;
+  --verde-texto: #2d5c3a;
+  --verde-card: #1e3d28;
+
+  /* Dimensão: Lógica (azul) */
+  --azul-tint: #60a5fa;
+  --azul-texto: #185fa5;
+  --azul-card: #0f1a2e;
+
+  /* Dimensão: Criativa/Social (rosa) */
+  --rosa-tint: #f472b6;
+  --rosa-texto: #993556;
+  --rosa-card: #3d1a2e;
+
+  /* Dimensão: Emocional/Propósito (amarelo) */
+  --amarelo-tint: #facc15;
+  --amarelo-texto: #854f0b;
+  --amarelo-card: #2a1f0a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  cursor: none;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  color: var(--texto-principal);
+  background: var(--fundo-pai);
+  min-height: 100vh;
+}
+
+/* Custom cursor */
+#cursor {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #a78bfa;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: multiply;
+  transition: width 0.15s ease, height 0.15s ease;
+}
+
+#cursor.cursor-hover {
+  width: 22px;
+  height: 22px;
+}
+
+.cursor-trail {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Typography helpers */
+.font-editorial {
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.font-ui {
+  font-family: 'Nunito', sans-serif;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.3);
+  border-radius: 4px;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Card hover */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+}
+
+/* Dashed card border */
+.card-dashed {
+  border: 1.5px dashed rgba(160, 144, 128, 0.4);
+  border-radius: 16px;
+}
+
+/* Dimension badge */
+.badge-dimensao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Nunito', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+/* Progress dots */
+.progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(160, 144, 128, 0.25);
+  transition: all 0.3s ease;
+}
+.progress-dot.active {
+  width: 24px;
+  border-radius: 5px;
+}
+.progress-dot.done {
+  background: #4ade80;
+}
+
+/* Answer states */
+.resposta-errada {
+  background: rgba(250, 204, 21, 0.12) !important;
+  border: 1.5px solid rgba(250, 204, 21, 0.5) !important;
+}
+
+.resposta-certa {
+  background: rgba(74, 222, 128, 0.12) !important;
+  border: 1.5px solid rgba(74, 222, 128, 0.5) !important;
+}
+
+/* PIN input */
+.pin-digit {
+  width: 64px;
+  height: 72px;
+  border-radius: 16px;
+  border: 2px solid rgba(160, 144, 128, 0.3);
+  background: white;
+  font-size: 28px;
+  font-weight: 800;
+  text-align: center;
+  font-family: 'Nunito', sans-serif;
+  color: var(--texto-principal);
+  transition: border-color 0.2s;
+  outline: none;
+  cursor: none;
+}
+.pin-digit:focus {
+  border-color: #a78bfa;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-fade-in { animation: fadeIn 0.4s ease forwards; }
+.animate-slide-up { animation: slideUp 0.5s ease forwards; }
+.animate-pulse-soft { animation: pulseSoft 2s ease-in-out infinite; }
