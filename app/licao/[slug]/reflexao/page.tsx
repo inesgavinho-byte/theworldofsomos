@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDimensaoBySlug } from "@/lib/dimensoes";
@@ -52,7 +52,7 @@ const EMOCOES = [
 ];
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }
 
 function ReflexaoContent({ slug }: { slug: string }) {
@@ -419,7 +419,7 @@ function ReflexaoContent({ slug }: { slug: string }) {
 }
 
 export default function ReflexaoPage({ params }: PageProps) {
-  const { slug } = use(params);
+  const { slug } = params;
   return (
     <Suspense fallback={<div style={{ minHeight: "100vh", background: "var(--fundo-crianca)" }} />}>
       <ReflexaoContent slug={slug} />
