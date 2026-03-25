@@ -41,6 +41,32 @@ const LICOES_INFO: Record<string, { titulo: string; descricao: string; duracao: 
     descricao: "Há estratégias de aprendizagem que funcionam e outras que não. Descobre as técnicas que os melhores estudantes do mundo usam.",
     duracao: "12 min",
   },
+  // Novas lições — 3.º/4.º ano PT
+  "palavras-que-voam": {
+    titulo: "As Palavras que Voam",
+    descricao: "Uma criança descobre que as palavras têm superpotências diferentes — algumas descrevem, outras mostram acção, outras ainda ligam ideias. Adjectivos, verbos e conjunções ganham vida numa aventura de linguagem.",
+    duracao: "12 min",
+  },
+  "o-mapa-dos-numeros": {
+    titulo: "O Mapa dos Números",
+    descricao: "Uma exploradora encontra um mapa antigo cheio de números misteriosos. Para desvendar os segredos do mapa, tem de perceber padrões, multiplicações e divisões simples.",
+    duracao: "14 min",
+  },
+  "a-vida-secreta-das-plantas": {
+    titulo: "A Vida Secreta das Plantas",
+    descricao: "Uma criança descobre que as plantas respiram de forma diferente dos animais. De dia fazem fotossíntese, de noite respiram. Explora as partes da planta e o ciclo da água.",
+    duracao: "13 min",
+  },
+  "a-aventura-em-ingles": {
+    titulo: "The Big Adventure",
+    descricao: "Um robot chamado Beep chega a Portugal e não fala português. Ajuda-o a aprender palavras essenciais do dia-a-dia — cores, animais, acções e estados emocionais.",
+    duracao: "11 min",
+  },
+  "os-descobrimentos": {
+    titulo: "Os Descobrimentos",
+    descricao: "Portugal, pequeno país na ponta da Europa, teve uma ideia enorme: e se atravessássemos o oceano? A história das caravelas, de Vasco da Gama e do que os portugueses encontraram.",
+    duracao: "15 min",
+  },
 };
 
 interface PageProps {
