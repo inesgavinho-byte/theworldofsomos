@@ -217,6 +217,177 @@ const EXERCICIOS_POR_SLUG: Record<string, { pergunta: string; opcoes: string[]; 
       explicacao: "A bússola aponta sempre para o norte magnético, ajudando os navegadores a saber a direcção.",
     },
   ],
+  "as-emocoes-sao-dados": [
+    {
+      pergunta: "Quando sentes medo antes de uma apresentação, o que o teu corpo está a tentar dizer?",
+      opcoes: [
+        "Que és fraco e não deves fazer a apresentação",
+        "Que a situação importa e deves estar atento",
+        "Que há perigo real e tens de fugir",
+        "Que estás doente e precisas de descanso",
+      ],
+      correta: 1,
+      explicacao: "O medo antes de uma apresentação é informação útil — indica que a situação te importa e que podes preparar-te melhor.",
+    },
+    {
+      pergunta: "Qual é a diferença entre uma emoção e um comportamento?",
+      opcoes: [
+        "São a mesma coisa — emoção e comportamento significam o mesmo",
+        "A emoção é o que fazes, o comportamento é o que sentes",
+        "A emoção é o que sentes dentro de ti, o comportamento é o que fazes",
+        "As emoções são sempre visíveis para os outros",
+      ],
+      correta: 2,
+      explicacao: "A emoção acontece dentro de nós — é a informação. O comportamento é a resposta que escolhemos dar a essa informação.",
+    },
+    {
+      pergunta: "A Ana está com raiva do irmão mas decide respirar fundo antes de responder. O que está a fazer?",
+      opcoes: [
+        "Fingir que não está com raiva",
+        "Separar a emoção do comportamento — sentiu a emoção mas escolheu como agir",
+        "Ignorar as suas emoções",
+        "Mostrar que não liga ao irmão",
+      ],
+      correta: 1,
+      explicacao: "A Ana reconheceu a raiva (emoção) mas escolheu respirar antes de agir (comportamento). Isso é inteligência emocional.",
+    },
+    {
+      pergunta: "Se uma pessoa chora ao ver um filme triste, o que é que isso nos diz?",
+      opcoes: [
+        "Que ela é fraca e não devia chorar",
+        "Que ela não gosta do filme",
+        "Que ela está doente",
+        "Que ela consegue sentir empatia e ligação com os outros",
+      ],
+      correta: 3,
+      explicacao: "Chorar ao ver algo triste mostra capacidade de empatia — conseguir sentir o que os outros sentem. Não é fraqueza, é informação.",
+    },
+    {
+      pergunta: "Porque é que reconhecer as nossas emoções é importante?",
+      opcoes: [
+        "Para as esconder melhor dos outros",
+        "Para não as sentir e parecer mais forte",
+        "Para as compreender e fazer escolhas melhores",
+        "Para sabermos que emoções são proibidas",
+      ],
+      correta: 2,
+      explicacao: "Quando reconhecemos o que sentimos, percebemos a mensagem da emoção e podemos fazer escolhas conscientes em vez de reagir automaticamente.",
+    },
+  ],
+  "errar-e-parte-do-mapa": [
+    {
+      pergunta: "O que é a 'mentalidade de crescimento' (growth mindset)?",
+      opcoes: [
+        "Acreditar que a inteligência é fixa — ou se tem ou não se tem",
+        "Nunca cometer erros e ser sempre o melhor",
+        "Acreditar que podemos crescer com esforço, prática e aprendizagem",
+        "Crescer fisicamente e ficar mais alto",
+      ],
+      correta: 2,
+      explicacao: "A mentalidade de crescimento é a crença de que as capacidades podem ser desenvolvidas com esforço, estratégia e aprendizagem.",
+    },
+    {
+      pergunta: "Quando cometes um erro numa tarefa, o que é mais útil fazer?",
+      opcoes: [
+        "Desistir imediatamente — provavelmente não és bom nisso",
+        "Culpar os outros pelo teu erro",
+        "Fingir que não aconteceu e seguir em frente",
+        "Perceber onde erraste, aprender com isso e tentar de novo",
+      ],
+      correta: 3,
+      explicacao: "O erro torna-se aprendizagem quando percebemos o que correu mal e ajustamos a nossa abordagem.",
+    },
+    {
+      pergunta: "Qual destas frases mostra uma mentalidade de crescimento?",
+      opcoes: [
+        "Não sou bom a matemática e nunca vou ser.",
+        "Ainda não consegui resolver isto, mas posso aprender.",
+        "Já nasci com talento — não preciso de esforçar-me.",
+        "Errar é uma vergonha e nunca devia acontecer.",
+      ],
+      correta: 1,
+      explicacao: "'Ainda não consegui' é a frase mais poderosa da mentalidade de crescimento. O 'ainda' muda tudo.",
+    },
+    {
+      pergunta: "O que acontece no teu cérebro quando erras e percebes porquê?",
+      opcoes: [
+        "O cérebro fica mais fraco e cansado",
+        "Nada — os erros não têm efeito no cérebro",
+        "O cérebro cria conexões novas — é quando mais estás a aprender",
+        "O cérebro apaga a informação errada",
+      ],
+      correta: 2,
+      explicacao: "É exactamente no momento em que erramos e compreendemos o porquê que o cérebro forma novas conexões neuronais.",
+    },
+    {
+      pergunta: "Qual é a diferença entre esforço e resultado?",
+      opcoes: [
+        "São exactamente a mesma coisa",
+        "O resultado é o único que importa — o esforço não conta",
+        "O esforço é o que controlas; o resultado pode depender de mais factores",
+        "O esforço é sempre visível para os outros",
+      ],
+      correta: 2,
+      explicacao: "Podemos controlar o esforço que colocamos, mas o resultado depende também de outros factores. Focar no esforço é mais produtivo.",
+    },
+  ],
+  "o-planeta-e-a-nossa-casa": [
+    {
+      pergunta: "Qual é o nome da camada de ar que envolve e protege a Terra?",
+      opcoes: [
+        "Hidrosfera",
+        "Litosfera",
+        "Atmosfera",
+        "Biosfera",
+      ],
+      correta: 2,
+      explicacao: "A atmosfera é a camada de gases que envolve a Terra, protegendo-a da radiação solar e mantendo a temperatura adequada para a vida.",
+    },
+    {
+      pergunta: "O que acontece quando muitas árvores são cortadas numa floresta?",
+      opcoes: [
+        "O ar fica melhor porque há mais espaço",
+        "Aparecem mais animais porque têm mais espaço para viver",
+        "Há menos absorção de CO₂, o solo perde nutrientes e a biodiversidade diminui",
+        "A chuva aumenta porque não há folhas para a bloquear",
+      ],
+      correta: 2,
+      explicacao: "As árvores absorvem CO₂, retêm o solo e fornecem habitat. Cortá-las em massa desequilibra todo o ecossistema.",
+    },
+    {
+      pergunta: "Qual destas acções ajuda o planeta no dia-a-dia?",
+      opcoes: [
+        "Deixar as luzes ligadas quando saímos do quarto",
+        "Comprar sempre coisas novas em vez de reparar as antigas",
+        "Separar o lixo para reciclar e usar menos plástico",
+        "Usar sempre o carro mesmo para distâncias curtas",
+      ],
+      correta: 2,
+      explicacao: "Reciclar e reduzir o plástico são escolhas diárias com impacto real — cada pequena acção conta quando repetida por muitas pessoas.",
+    },
+    {
+      pergunta: "O que é um ecossistema?",
+      opcoes: [
+        "Uma fábrica de energia renovável",
+        "Uma cidade planeada para ser sustentável",
+        "Um tipo especial de planta tropical",
+        "Uma comunidade de seres vivos que interagem entre si e com o seu ambiente",
+      ],
+      correta: 3,
+      explicacao: "Um ecossistema é um sistema formado por seres vivos e o ambiente onde vivem, em constante interacção e equilíbrio.",
+    },
+    {
+      pergunta: "Porque é que a Terra é chamada 'o planeta azul'?",
+      opcoes: [
+        "Porque tem muito frio e o gelo é azul",
+        "Porque tem tanta água que parece azul vista do espaço",
+        "Porque o céu é sempre azul em todo o planeta",
+        "Porque os cientistas escolheram azul como cor do planeta",
+      ],
+      correta: 1,
+      explicacao: "Cerca de 71% da superfície da Terra é coberta de água. Vista do espaço, essa água dá ao planeta a sua cor azul característica.",
+    },
+  ],
   "sistema-solar": [
     {
       pergunta: "Qual é o planeta mais próximo do Sol?",
