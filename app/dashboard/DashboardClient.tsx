@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { getCurriculoConfig, formatAnoEscolar } from "@/lib/curriculo";
 
 const LICOES = [
   {
@@ -417,13 +418,28 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
                       justifyContent: "center",
                       fontSize: "14px",
                       fontWeight: 800,
+                      flexShrink: 0,
                     }}
                   >
                     {c.nome?.charAt(0) ?? "?"}
                   </div>
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: "14px", fontWeight: 700 }}>{c.nome}</p>
-                    <p style={{ fontSize: "11px", opacity: 0.5 }}>{c.escola ?? "—"}</p>
+                    {c.curriculo && c.curriculo !== "outro" ? (
+                      <p style={{ fontSize: "11px", opacity: 0.6, fontWeight: 600 }}>
+                        {(() => {
+                          const cfg = getCurriculoConfig(c.curriculo);
+                          const anoDisplay = c.ano_escolar
+                            ? formatAnoEscolar(c.curriculo, c.ano_escolar)
+                            : null;
+                          return cfg
+                            ? `${cfg.bandeira} ${c.curriculo}${anoDisplay ? ` · ${anoDisplay}` : ""}`
+                            : c.curriculo;
+                        })()}
+                      </p>
+                    ) : (
+                      <p style={{ fontSize: "11px", opacity: 0.5 }}>{c.escola ?? "—"}</p>
+                    )}
                   </div>
                 </div>
               ))
