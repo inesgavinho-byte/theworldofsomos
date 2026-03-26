@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getDimensaoBySlug } from "@/lib/dimensoes";
 
@@ -155,11 +155,11 @@ function getExercicios(slug: string) {
 }
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }
 
 export default function ExerciciosPage({ params }: PageProps) {
-  const { slug } = use(params);
+  const { slug } = params;
   const router = useRouter();
   const dim = getDimensaoBySlug(slug);
   const exercicios = getExercicios(slug);

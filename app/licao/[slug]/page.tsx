@@ -1,6 +1,5 @@
 "use client";
 
-import { use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getDimensaoBySlug } from "@/lib/dimensoes";
@@ -44,11 +43,11 @@ const LICOES_INFO: Record<string, { titulo: string; descricao: string; duracao: 
 };
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }
 
 export default function LicaoCapaPage({ params }: PageProps) {
-  const { slug } = use(params);
+  const { slug } = params;
   const router = useRouter();
   const dim = getDimensaoBySlug(slug);
   const info = LICOES_INFO[slug] ?? {
