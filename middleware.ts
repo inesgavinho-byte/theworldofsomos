@@ -82,8 +82,12 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // /dashboard and /onboarding — only pai or admin
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding")) {
+  // /dashboard, /onboarding and /gerar — only pai or admin
+  if (
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/gerar")
+  ) {
     if (tipo !== "pai" && tipo !== "admin") {
       return NextResponse.redirect(
         new URL("/crianca/dashboard", request.url)

@@ -57,6 +57,166 @@ const EXERCICIOS_POR_SLUG: Record<string, { pergunta: string; opcoes: string[]; 
       explicacao: "Uma espécie endémica só existe naturalmente numa região geográfica específica.",
     },
   ],
+  "palavras-que-voam": [
+    {
+      pergunta: "O gato ___ rapidamente pela janela.",
+      opcoes: ["saltou", "amarelo", "bonito", "mas"],
+      correta: 0,
+      explicacao: "'Saltou' é um verbo — indica uma acção. As outras palavras são adjectivos ou conjunções.",
+    },
+    {
+      pergunta: "Qual destas palavras descreve como alguém é?",
+      opcoes: ["feliz", "correr", "e", "casa"],
+      correta: 0,
+      explicacao: "'Feliz' é um adjectivo — descreve uma qualidade ou estado de alguém.",
+    },
+    {
+      pergunta: "A Maria ___ a sua amiga porque ela estava triste.",
+      opcoes: ["abraçou", "grande", "porém", "azul"],
+      correta: 0,
+      explicacao: "'Abraçou' é um verbo que descreve uma acção concreta que a Maria fez.",
+    },
+    {
+      pergunta: "Qual é o adjectivo nesta frase: 'O céu está limpo'?",
+      opcoes: ["limpo", "céu", "está", "o"],
+      correta: 0,
+      explicacao: "'Limpo' é o adjectivo — descreve como está o céu.",
+    },
+    {
+      pergunta: "Liga duas ideias: 'Gosto de ler ___ também gosto de desenhar.'",
+      opcoes: ["e", "corri", "bonito", "porta"],
+      correta: 0,
+      explicacao: "'E' é uma conjunção — serve para ligar duas ideias ou frases.",
+    },
+  ],
+  "o-mapa-dos-numeros": [
+    {
+      pergunta: "Qual é o resultado de 7 × 8?",
+      opcoes: ["56", "54", "63", "48"],
+      correta: 0,
+      explicacao: "7 × 8 = 56. Podes pensar: 7 × 8 = 7 × 4 × 2 = 28 × 2 = 56.",
+    },
+    {
+      pergunta: "Se tens 36 rebuçados e divides por 4 amigos, quantos fica cada um?",
+      opcoes: ["9", "8", "7", "12"],
+      correta: 0,
+      explicacao: "36 ÷ 4 = 9. Cada amigo fica com 9 rebuçados.",
+    },
+    {
+      pergunta: "Qual é o número que falta? 5, 10, 15, ___, 25",
+      opcoes: ["20", "18", "22", "19"],
+      correta: 0,
+      explicacao: "O padrão é +5 a cada passo. Depois de 15 vem 20, depois 25.",
+    },
+    {
+      pergunta: "Uma caixa tem 6 filas com 9 ovos cada. Quantos ovos no total?",
+      opcoes: ["54", "45", "63", "48"],
+      correta: 0,
+      explicacao: "6 × 9 = 54. Multiplicar é somar grupos iguais — 6 grupos de 9.",
+    },
+    {
+      pergunta: "Qual é metade de 84?",
+      opcoes: ["42", "44", "40", "46"],
+      correta: 0,
+      explicacao: "84 ÷ 2 = 42. Metade é dividir por 2.",
+    },
+  ],
+  "a-vida-secreta-das-plantas": [
+    {
+      pergunta: "O que é que as plantas precisam para fazer fotossíntese?",
+      opcoes: ["luz solar", "vento", "terra", "frio"],
+      correta: 0,
+      explicacao: "As plantas precisam de luz solar (e água e CO₂) para produzir energia através da fotossíntese.",
+    },
+    {
+      pergunta: "Qual parte da planta absorve água do solo?",
+      opcoes: ["raiz", "folha", "flor", "caule"],
+      correta: 0,
+      explicacao: "As raízes absorvem água e minerais do solo e enviam-nos para o resto da planta.",
+    },
+    {
+      pergunta: "O que libertam as plantas durante o dia?",
+      opcoes: ["oxigénio", "dióxido de carbono", "azoto", "vapor"],
+      correta: 0,
+      explicacao: "Durante o dia, as plantas fazem fotossíntese e libertam oxigénio — o ar que respiramos!",
+    },
+    {
+      pergunta: "Como se chama o processo em que a água dos rios sobe para as nuvens?",
+      opcoes: ["evaporação", "fotossíntese", "respiração", "germinação"],
+      correta: 0,
+      explicacao: "A evaporação é quando a água líquida se transforma em vapor e sobe para a atmosfera.",
+    },
+    {
+      pergunta: "Onde fica guardada a energia que a planta produz?",
+      opcoes: ["fruto e folhas", "flores", "raízes", "casca"],
+      correta: 0,
+      explicacao: "A energia produzida pela fotossíntese fica armazenada sob a forma de açúcares nas folhas e frutos.",
+    },
+  ],
+  "a-aventura-em-ingles": [
+    {
+      pergunta: "Como se diz 'gato' em inglês?",
+      opcoes: ["cat", "dog", "bird", "fish"],
+      correta: 0,
+      explicacao: "'Cat' significa gato em inglês. 'Dog' é cão, 'bird' é pássaro, 'fish' é peixe.",
+    },
+    {
+      pergunta: "What colour is the sun?",
+      opcoes: ["yellow", "blue", "green", "red"],
+      correta: 0,
+      explicacao: "The sun is yellow! 'Yellow' em português é amarelo.",
+    },
+    {
+      pergunta: "Como se diz 'estou feliz' em inglês?",
+      opcoes: ["I am happy", "I am sad", "I am tired", "I am hungry"],
+      correta: 0,
+      explicacao: "'I am happy' = estou feliz. 'Sad' = triste, 'tired' = cansado, 'hungry' = com fome.",
+    },
+    {
+      pergunta: "Which word means 'correr'?",
+      opcoes: ["run", "jump", "swim", "fly"],
+      correta: 0,
+      explicacao: "'Run' significa correr. 'Jump' = saltar, 'swim' = nadar, 'fly' = voar.",
+    },
+    {
+      pergunta: "How many days are in a week?",
+      opcoes: ["7", "5", "6", "8"],
+      correta: 0,
+      explicacao: "There are 7 days in a week: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.",
+    },
+  ],
+  "os-descobrimentos": [
+    {
+      pergunta: "Como se chamavam os barcos usados pelos navegadores portugueses?",
+      opcoes: ["caravelas", "galeões", "fragatas", "barcaças"],
+      correta: 0,
+      explicacao: "As caravelas eram barcos rápidos e manobráveis, perfeitos para explorar os oceanos desconhecidos.",
+    },
+    {
+      pergunta: "Quem foi o primeiro navegador a chegar à Índia pelo mar?",
+      opcoes: ["Vasco da Gama", "Pedro Álvares Cabral", "Bartolomeu Dias", "Fernão de Magalhães"],
+      correta: 0,
+      explicacao: "Vasco da Gama chegou à Índia em 1498, abrindo a rota do Cabo — um feito histórico enorme.",
+    },
+    {
+      pergunta: "Em que século aconteceram os Descobrimentos portugueses?",
+      opcoes: ["século XV e XVI", "século XII", "século XVIII", "século X"],
+      correta: 0,
+      explicacao: "Os grandes Descobrimentos aconteceram principalmente entre 1400 e 1550, nos séculos XV e XVI.",
+    },
+    {
+      pergunta: "Que país foi descoberto por Pedro Álvares Cabral em 1500?",
+      opcoes: ["Brasil", "Angola", "Índia", "Moçambique"],
+      correta: 0,
+      explicacao: "Pedro Álvares Cabral chegou ao Brasil em abril de 1500, durante uma viagem para a Índia.",
+    },
+    {
+      pergunta: "Para que servia a bússola nos barcos?",
+      opcoes: ["indicar o norte", "medir o tempo", "ver as estrelas", "calcular distâncias"],
+      correta: 0,
+      explicacao: "A bússola aponta sempre para o norte magnético, ajudando os navegadores a saber a direcção.",
+    },
+  ],
   "sistema-solar": [
     {
       pergunta: "Qual é o planeta mais próximo do Sol?",
@@ -154,6 +314,47 @@ function getExercicios(slug: string) {
   return EXERCICIOS_POR_SLUG[slug] ?? EXERCICIOS_PADRAO;
 }
 
+// Character configurations per dimension
+const PERSONAGENS_POR_DIMENSAO: Record<string, Array<{ arquivo: string; video?: string }>> = {
+  naturalista: [
+    { arquivo: "Maya.png", video: "MAYA.mp4" },
+    { arquivo: "Mayasalta.png" },
+    { arquivo: "Sofia.png" },
+  ],
+  logica: [
+    { arquivo: "Kenji.png" },
+    { arquivo: "Finn.png" },
+    { arquivo: "Ibrahim.png" },
+    { arquivo: "Leo.png" },
+  ],
+  artistica: [
+    { arquivo: "Yuki.png" },
+    { arquivo: "Sara.png" },
+  ],
+  social: [
+    { arquivo: "Nora.png" },
+    { arquivo: "Kwame.png" },
+  ],
+  identitaria: [
+    { arquivo: "Tomas.png" },
+    { arquivo: "Layla.png" },
+  ],
+};
+
+// Lesson-specific character overrides
+const PERSONAGEM_POR_SLUG: Record<string, { arquivo: string; video?: string }> = {
+  "vida-secreta-das-plantas": { arquivo: "Sofia_experiencias.png" },
+};
+
+const FRASES_ACERTO = ["Muito bem!", "Acertaste!", "Excelente!"];
+const FRASES_ERRO = ["Quase!", "Tenta de novo!", "Não desistas!"];
+
+function getPersonagem(slug: string, dimensaoSlug: string, questionIndex: number) {
+  if (PERSONAGEM_POR_SLUG[slug]) return PERSONAGEM_POR_SLUG[slug];
+  const pool = PERSONAGENS_POR_DIMENSAO[dimensaoSlug] ?? PERSONAGENS_POR_DIMENSAO.identitaria;
+  return pool[questionIndex % pool.length];
+}
+
 interface PageProps {
   params: { slug: string };
 }
@@ -173,6 +374,11 @@ export default function ExerciciosPage({ params }: PageProps) {
   const exercicio = exercicios[atual];
   const total = exercicios.length;
   const correta = selecionada === exercicio.correta;
+
+  const personagem = getPersonagem(slug, dim.slug, atual);
+  const fraseFeedback = correta
+    ? FRASES_ACERTO[atual % FRASES_ACERTO.length]
+    : FRASES_ERRO[atual % FRASES_ERRO.length];
 
   const confirmar = () => {
     if (selecionada === null) return;
@@ -434,38 +640,97 @@ export default function ExerciciosPage({ params }: PageProps) {
           })}
         </div>
 
-        {/* Feedback after answer */}
+        {/* Feedback after answer — character + encouragement */}
         {confirmada && (
           <div
             style={{
-              padding: "16px 20px",
-              borderRadius: "16px",
-              background: correta ? "rgba(74,222,128,0.08)" : "rgba(250,204,21,0.08)",
-              border: `1px solid ${correta ? "rgba(74,222,128,0.3)" : "rgba(250,204,21,0.3)"}`,
+              display: "flex",
+              alignItems: "flex-end",
+              gap: "12px",
               marginBottom: "20px",
               animation: "fadeIn 0.3s ease",
             }}
           >
-            <p
+            {/* Character */}
+            <div
               style={{
-                fontSize: "13px",
-                fontWeight: 700,
-                color: correta ? "#2d5c3a" : "#854f0b",
-                marginBottom: "4px",
+                position: "relative",
+                width: "90px",
+                height: "130px",
+                flexShrink: 0,
+                overflow: "hidden",
               }}
             >
-              {correta ? "Muito bem!" : "Quase lá ~"}
-            </p>
-            <p
+              {personagem.video ? (
+                <video
+                  src={`/assets/personagens/${personagem.video}`}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: "bottom center",
+                  }}
+                />
+              ) : (
+                <img
+                  src={`/assets/personagens/${personagem.arquivo}`}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: "bottom center",
+                  }}
+                />
+              )}
+              {/* Gradient mask to blend dark image background with page */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "radial-gradient(ellipse 90% 80% at 50% 55%, transparent 30%, #f5f2ec 80%), " +
+                    "linear-gradient(to top, #f5f2ec 0%, transparent 45%)",
+                  pointerEvents: "none",
+                }}
+              />
+            </div>
+
+            {/* Feedback card */}
+            <div
               style={{
-                fontSize: "13px",
-                fontWeight: 600,
-                color: "var(--texto-principal)",
-                opacity: 0.8,
+                flex: 1,
+                padding: "16px",
+                borderRadius: "16px",
+                background: correta ? "rgba(74,222,128,0.08)" : "rgba(250,204,21,0.08)",
+                border: `1px solid ${correta ? "rgba(74,222,128,0.3)" : "rgba(250,204,21,0.3)"}`,
               }}
             >
-              {exercicio.explicacao}
-            </p>
+              <p
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: correta ? "#2d5c3a" : "#854f0b",
+                  marginBottom: "4px",
+                }}
+              >
+                {fraseFeedback}
+              </p>
+              <p
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "var(--texto-principal)",
+                  opacity: 0.8,
+                }}
+              >
+                {exercicio.explicacao}
+              </p>
+            </div>
           </div>
         )}
 

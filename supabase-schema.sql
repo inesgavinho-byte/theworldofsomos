@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS criancas (
   nome text,
   data_nascimento date,
   escola text,
-  curriculo text DEFAULT 'PT' CHECK (curriculo IN ('PT', 'Cambridge', 'IB', 'outro')),
+  curriculo text DEFAULT 'PT' CHECK (curriculo IN ('PT', 'BNCC', 'Cambridge', 'IB', 'FR', 'outro')),
+  ano_escolar text,
   pais text,
   estilo_aprendizagem text
 );
@@ -47,7 +48,10 @@ CREATE TABLE IF NOT EXISTS competencias (
   area text,
   nivel int,
   descricao text,
-  curriculo text
+  curriculo text,
+  idioma text DEFAULT 'pt-PT',
+  ano_escolar text
+  -- ano_escolar: '3', '4', '5' para PT | 'Year 3' para Cambridge | 'Grade 3' para IB | 'CE2' para FR
 );
 
 -- Progresso
@@ -67,7 +71,8 @@ CREATE TABLE IF NOT EXISTS exercicios (
   tipo text,
   conteudo jsonb,
   dificuldade int,
-  metodo_ensino text
+  metodo_ensino text,
+  idioma text DEFAULT 'pt-PT'
 );
 
 -- Sessões
@@ -82,6 +87,33 @@ CREATE TABLE IF NOT EXISTS sessoes (
   reflexao_texto text,
   created_at timestamptz DEFAULT now()
 );
+
+-- Gerações IA (upload de livros + exercícios gerados)
+CREATE TABLE IF NOT EXISTS geracoes_ia (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  familia_id uuid REFERENCES familias,
+  crianca_id uuid REFERENCES criancas,
+  tipo_upload text CHECK (tipo_upload IN ('foto', 'pdf', 'imagem')),
+  storage_path text,
+  curriculo text,
+  ano_escolar text,
+  exercicios_gerados jsonb,
+  estado text DEFAULT 'pendente' CHECK (estado IN ('pendente', 'processando', 'concluido', 'erro')),
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE geracoes_ia ENABLE ROW LEVEL SECURITY;
+
+-- Apenas membros da família podem ver/inserir as suas gerações
+CREATE POLICY "Familia pode gerir geracoes_ia" ON geracoes_ia
+  FOR ALL USING (familia_id = get_user_familia_id());
+
+-- ============================================
+-- Supabase Storage — bucket livros-upload
+-- Criar manualmente no dashboard:
+--   bucket: livros-upload (private)
+--   política: utilizador autenticado pode fazer upload para {familia_id}/{uuid}
+-- ============================================
 
 -- Desafios família
 CREATE TABLE IF NOT EXISTS desafios_familia (
@@ -109,6 +141,40 @@ ALTER TABLE desafios_familia ADD COLUMN IF NOT EXISTS respostas_pai jsonb;
 ALTER TABLE desafios_familia ADD COLUMN IF NOT EXISTS respostas_crianca jsonb;
 ALTER TABLE desafios_familia ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
 
+-- Configuração de currículos
+CREATE TABLE IF NOT EXISTS curriculos_config (
+  codigo text PRIMARY KEY,
+  nome text,
+  idioma text,
+  idioma_codigo text, -- 'pt-PT', 'pt-BR', 'en', 'fr'
+  anos_escolares jsonb, -- ['1','2','3','4','5','6','7','8','9']
+  anos_display jsonb,   -- ['1.º ano', '2.º ano', ...] ou ['Year 1', 'Year 2', ...]
+  ativo boolean DEFAULT true
+);
+
+INSERT INTO curriculos_config VALUES
+  ('PT',        'Currículo Nacional',           'Português',  'pt-PT',
+   '["1","2","3","4","5","6","7","8","9"]',
+   '["1.º ano","2.º ano","3.º ano","4.º ano","5.º ano","6.º ano","7.º ano","8.º ano","9.º ano"]',
+   true),
+  ('BNCC',      'Base Nacional (Brasil)',        'Português',  'pt-BR',
+   '["1","2","3","4","5","6","7","8","9"]',
+   '["1.º ano","2.º ano","3.º ano","4.º ano","5.º ano","6.º ano","7.º ano","8.º ano","9.º ano"]',
+   true),
+  ('Cambridge', 'Cambridge International',      'English',    'en',
+   '["1","2","3","4","5","6","7","8","9"]',
+   '["Year 1","Year 2","Year 3","Year 4","Year 5","Year 6","Year 7","Year 8","Year 9"]',
+   true),
+  ('IB',        'International Baccalaureate',  'English',    'en',
+   '["1","2","3","4","5","6","7","8","9","10"]',
+   '["Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10"]',
+   true),
+  ('FR',        'Éducation Nationale',          'Français',   'fr',
+   '["CP","CE1","CE2","CM1","CM2","6","5","4","3"]',
+   '["CP","CE1","CE2","CM1","CM2","6ème","5ème","4ème","3ème"]',
+   true)
+ON CONFLICT (codigo) DO NOTHING;
+
 -- ============================================
 -- RLS: Row Level Security
 -- ============================================
@@ -122,6 +188,7 @@ ALTER TABLE progresso ENABLE ROW LEVEL SECURITY;
 ALTER TABLE exercicios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sessoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE desafios_familia ENABLE ROW LEVEL SECURITY;
+ALTER TABLE curriculos_config ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- RLS Policies
@@ -143,6 +210,10 @@ CREATE POLICY "Competencias are public" ON competencias
 
 -- Exercicios: public read
 CREATE POLICY "Exercicios are public" ON exercicios
+  FOR SELECT USING (true);
+
+-- Curriculos config: public read
+CREATE POLICY "Curriculos config are public" ON curriculos_config
   FOR SELECT USING (true);
 
 -- ============================================
@@ -190,3 +261,21 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
 -- SELECT id, email, 'admin' FROM auth.users
 -- WHERE email = 'SEU_EMAIL'
 -- ON CONFLICT (id) DO UPDATE SET tipo = 'admin';
+
+-- ============================================
+-- Migration: multi-curriculum support
+-- Run these if the tables already exist
+-- ============================================
+
+-- Update criancas constraint to support all curricula
+-- alter table criancas drop constraint if exists criancas_curriculo_check;
+-- alter table criancas add constraint criancas_curriculo_check
+--   check (curriculo in ('PT', 'BNCC', 'Cambridge', 'IB', 'FR', 'outro'));
+-- alter table criancas add column if not exists ano_escolar text;
+
+-- Add idioma and ano_escolar to competencias
+-- alter table competencias add column if not exists idioma text default 'pt-PT';
+-- alter table competencias add column if not exists ano_escolar text;
+
+-- Add idioma to exercicios
+-- alter table exercicios add column if not exists idioma text default 'pt-PT';

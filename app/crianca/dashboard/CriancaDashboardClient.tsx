@@ -8,19 +8,21 @@ const DIAS_SEMANA = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 const HOJE_IDX = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
 
 const MISSAO = {
-  slug: "floresta-tropical",
-  titulo: "A Floresta Tropical",
-  dimensao: "Naturalista",
-  cor: "#4ade80",
-  corCard: "#1e3d28",
+  slug: "palavras-que-voam",
+  titulo: "As Palavras que Voam",
+  dimensao: "Artística",
+  cor: "#f472b6",
+  corCard: "#3d1a2e",
   progresso: 0,
   total: 5,
 };
 
 const EXERCICIOS_SESSAO = [
-  { slug: "floresta-tropical", titulo: "Floresta Tropical", dimensao: "Naturalista", cor: "#4ade80", feito: false },
-  { slug: "cerebro-incrivel", titulo: "O Cérebro", dimensao: "Identitária", cor: "#a78bfa", feito: true },
-  { slug: "sistema-solar", titulo: "Sistema Solar", dimensao: "Lógica", cor: "#60a5fa", feito: false },
+  { slug: "palavras-que-voam", titulo: "As Palavras que Voam", dimensao: "Artística", cor: "#f472b6", feito: false },
+  { slug: "o-mapa-dos-numeros", titulo: "O Mapa dos Números", dimensao: "Lógica", cor: "#60a5fa", feito: false },
+  { slug: "a-vida-secreta-das-plantas", titulo: "A Vida Secreta das Plantas", dimensao: "Naturalista", cor: "#4ade80", feito: false },
+  { slug: "a-aventura-em-ingles", titulo: "The Big Adventure", dimensao: "Artística", cor: "#f472b6", feito: false },
+  { slug: "os-descobrimentos", titulo: "Os Descobrimentos", dimensao: "Social", cor: "#facc15", feito: false },
 ];
 
 const TAREFAS = [
