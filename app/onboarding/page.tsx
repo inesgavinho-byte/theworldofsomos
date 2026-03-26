@@ -33,16 +33,43 @@ export default function OnboardingPage() {
     }
 
     // Get user's family
-    const { data: membro } = await supabase
+    let { data: membro } = await supabase
       .from("familia_membros")
       .select("familia_id")
       .eq("profile_id", user.id)
       .single();
 
+    // If no family found, auto-create one
     if (!membro?.familia_id) {
-      setError("Erro ao encontrar a tua família. Tenta outra vez.");
-      setLoading(false);
-      return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("nome")
+        .eq("id", user.id)
+        .single();
+
+      const nomeFamilia = profile?.nome
+        ? `Família ${profile.nome.split(" ")[0]}`
+        : "A minha família";
+
+      const { data: novaFamilia, error: familiaError } = await supabase
+        .from("familias")
+        .insert({ nome: nomeFamilia, plano: "free" })
+        .select()
+        .single();
+
+      if (familiaError || !novaFamilia) {
+        setError("Erro ao criar a tua família. Tenta outra vez.");
+        setLoading(false);
+        return;
+      }
+
+      await supabase.from("familia_membros").insert({
+        familia_id: novaFamilia.id,
+        profile_id: user.id,
+        papel: "pai",
+      });
+
+      membro = { familia_id: novaFamilia.id };
     }
 
     const { error: insertError } = await supabase.from("criancas").insert({
