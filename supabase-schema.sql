@@ -264,3 +264,43 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
 
 -- Add idioma to exercicios
 -- alter table exercicios add column if not exists idioma text default 'pt-PT';
+
+-- ============================================
+-- Migration: universal vs curricular content
+-- ============================================
+
+/**
+ * SOMOS — Arquitectura de Conteúdo
+ *
+ * Conteúdo Universal: pertence à condição humana.
+ * Não tem currículo, não tem fronteiras, não tem validade.
+ * Uma criança em Lisboa e uma criança em Tóquio têm as mesmas
+ * perguntas sobre quem são e para que estão aqui.
+ *
+ * Conteúdo Curricular: pertence à escola que a criança frequenta.
+ * Respeita a sequência, o vocabulário e os objectivos de cada sistema.
+ *
+ * O SOMOS é ambos — mas o Universal é o coração.
+ */
+
+-- Adicionar campo tipo à tabela competencias
+alter table competencias
+  add column if not exists tipo text default 'curricular'
+  check (tipo in ('universal', 'curricular'));
+
+-- Adicionar campo tipo_conteudo à tabela exercicios
+alter table exercicios
+  add column if not exists tipo_conteudo text default 'curricular'
+  check (tipo_conteudo in ('universal', 'curricular'));
+
+-- Lições universais (dimensão Identitária e Social)
+update competencias set tipo = 'universal'
+where dimensao in ('identitaria', 'social');
+
+-- Lições curriculares (Naturalista, Lógica, Artística com conteúdo escolar)
+update competencias set tipo = 'curricular'
+where dimensao in ('naturalista', 'logica', 'artistica');
+
+-- Excepção: lições Naturalista sobre planeta/ecologia são universais
+update competencias set tipo = 'universal'
+where area in ('ecologia', 'planeta', 'ambiente', 'natureza-global');

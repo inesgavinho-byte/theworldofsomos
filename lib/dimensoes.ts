@@ -60,6 +60,10 @@ export const SLUG_DIMENSAO: Record<string, Dimensao> = {
   "a-vida-secreta-das-plantas": "naturalista",
   "a-aventura-em-ingles": "artistica",
   "os-descobrimentos": "social",
+  // Lições universais
+  "as-emocoes-sao-dados": "identitaria",
+  "errar-e-parte-do-mapa": "identitaria",
+  "o-planeta-e-a-nossa-casa": "naturalista",
 };
 
 export function getDimensaoBySlug(slug: string): DimensaoConfig {
