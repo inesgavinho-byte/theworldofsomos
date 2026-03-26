@@ -83,6 +83,33 @@ CREATE TABLE IF NOT EXISTS sessoes (
   created_at timestamptz DEFAULT now()
 );
 
+-- Gerações IA (upload de livros + exercícios gerados)
+CREATE TABLE IF NOT EXISTS geracoes_ia (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  familia_id uuid REFERENCES familias,
+  crianca_id uuid REFERENCES criancas,
+  tipo_upload text CHECK (tipo_upload IN ('foto', 'pdf', 'imagem')),
+  storage_path text,
+  curriculo text,
+  ano_escolar text,
+  exercicios_gerados jsonb,
+  estado text DEFAULT 'pendente' CHECK (estado IN ('pendente', 'processando', 'concluido', 'erro')),
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE geracoes_ia ENABLE ROW LEVEL SECURITY;
+
+-- Apenas membros da família podem ver/inserir as suas gerações
+CREATE POLICY "Familia pode gerir geracoes_ia" ON geracoes_ia
+  FOR ALL USING (familia_id = get_user_familia_id());
+
+-- ============================================
+-- Supabase Storage — bucket livros-upload
+-- Criar manualmente no dashboard:
+--   bucket: livros-upload (private)
+--   política: utilizador autenticado pode fazer upload para {familia_id}/{uuid}
+-- ============================================
+
 -- Desafios família
 CREATE TABLE IF NOT EXISTS desafios_familia (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
