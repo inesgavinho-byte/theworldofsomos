@@ -91,8 +91,23 @@ CREATE TABLE IF NOT EXISTS desafios_familia (
   tipo text,
   conteudo jsonb,
   estado text,
-  respostas jsonb
+  respostas jsonb,
+  -- Campos adicionados para Jogar em Família
+  modo text CHECK (modo IN ('tempo_real', 'assincrono', 'fisico')),
+  criado_por uuid REFERENCES profiles,
+  expires_at timestamptz,
+  respostas_pai jsonb,
+  respostas_crianca jsonb,
+  created_at timestamptz DEFAULT now()
 );
+
+-- Migration: adicionar colunas se a tabela já existir
+ALTER TABLE desafios_familia ADD COLUMN IF NOT EXISTS modo text CHECK (modo IN ('tempo_real', 'assincrono', 'fisico'));
+ALTER TABLE desafios_familia ADD COLUMN IF NOT EXISTS criado_por uuid REFERENCES profiles;
+ALTER TABLE desafios_familia ADD COLUMN IF NOT EXISTS expires_at timestamptz;
+ALTER TABLE desafios_familia ADD COLUMN IF NOT EXISTS respostas_pai jsonb;
+ALTER TABLE desafios_familia ADD COLUMN IF NOT EXISTS respostas_crianca jsonb;
+ALTER TABLE desafios_familia ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
 
 -- ============================================
 -- RLS: Row Level Security
