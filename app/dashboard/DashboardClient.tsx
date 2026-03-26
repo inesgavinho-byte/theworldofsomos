@@ -372,6 +372,59 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
 
         {/* RIGHT SIDEBAR */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* Gerar exercícios do livro */}
+          <Link href="/gerar">
+            <div
+              className="card-hover"
+              style={{
+                background: "rgba(96,165,250,0.1)",
+                border: "1.5px solid rgba(96,165,250,0.25)",
+                borderRadius: "16px",
+                padding: "16px 18px",
+                cursor: "none",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "12px",
+                    background: "rgba(96,165,250,0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "20px",
+                    flexShrink: 0,
+                  }}
+                >
+                  📷
+                </div>
+                <div>
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 800,
+                      color: "#185fa5",
+                      marginBottom: "2px",
+                    }}
+                  >
+                    Gerar exercícios do livro
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "var(--texto-secundario)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Tira uma foto a qualquer página
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Link>
+
           {/* A vossa família */}
           <div
             style={{
