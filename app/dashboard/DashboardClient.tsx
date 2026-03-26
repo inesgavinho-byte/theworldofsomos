@@ -49,7 +49,7 @@ const LICOES = [
     slug: "o-proposito",
     titulo: "O Propósito",
     subtitulo: "Para que estou aqui?",
-    dimensao: "Emocional",
+    dimensao: "Social",
     cor: "#facc15",
     corTexto: "#854f0b",
     corCard: "#2a1f0a",
