@@ -40,6 +40,31 @@ const LICOES_INFO: Record<string, { titulo: string; descricao: string; duracao: 
     descricao: "Há estratégias de aprendizagem que funcionam e outras que não. Descobre as técnicas que os melhores estudantes do mundo usam.",
     duracao: "12 min",
   },
+  "palavras-que-voam": {
+    titulo: "As Palavras que Voam",
+    descricao: "Uma criança descobre que as palavras têm poderes diferentes — algumas descrevem, outras acção, outras ligam ideias. Adjectivos, verbos e conjunções numa aventura narrativa.",
+    duracao: "10 min",
+  },
+  "o-mapa-dos-numeros": {
+    titulo: "O Mapa dos Números",
+    descricao: "Uma exploradora encontra um mapa antigo cheio de números misteriosos. Para desvendar os seus segredos, tem de perceber padrões, multiplicações e divisões simples.",
+    duracao: "10 min",
+  },
+  "a-vida-secreta-das-plantas": {
+    titulo: "A Vida Secreta das Plantas",
+    descricao: "As plantas respiram de forma diferente dos animais. Descobre a fotossíntese, as partes da planta e o ciclo da água numa aventura pelo mundo vegetal.",
+    duracao: "10 min",
+  },
+  "a-aventura-em-ingles": {
+    titulo: "The Big Adventure",
+    descricao: "Um robot chamado Beep chega a Portugal e não fala português. Ajuda-o a aprender palavras essenciais — cores, números, animais e acções do dia-a-dia.",
+    duracao: "10 min",
+  },
+  "os-descobrimentos": {
+    titulo: "Os Descobrimentos",
+    descricao: "Portugal, pequeno país na ponta da Europa, teve uma ideia enorme: atravessar o oceano. Caravelas, Vasco da Gama e um mundo que mudou para sempre.",
+    duracao: "10 min",
+  },
 };
 
 interface PageProps {
