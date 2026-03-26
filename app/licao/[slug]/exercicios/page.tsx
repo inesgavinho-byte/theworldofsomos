@@ -314,6 +314,47 @@ function getExercicios(slug: string) {
   return EXERCICIOS_POR_SLUG[slug] ?? EXERCICIOS_PADRAO;
 }
 
+// Character configurations per dimension
+const PERSONAGENS_POR_DIMENSAO: Record<string, Array<{ arquivo: string; video?: string }>> = {
+  naturalista: [
+    { arquivo: "Maya.png", video: "MAYA.mp4" },
+    { arquivo: "Mayasalta.png" },
+    { arquivo: "Sofia.png" },
+  ],
+  logica: [
+    { arquivo: "Kenji.png" },
+    { arquivo: "Finn.png" },
+    { arquivo: "Ibrahim.png" },
+    { arquivo: "Leo.png" },
+  ],
+  artistica: [
+    { arquivo: "Yuki.png" },
+    { arquivo: "Sara.png" },
+  ],
+  social: [
+    { arquivo: "Nora.png" },
+    { arquivo: "Kwame.png" },
+  ],
+  identitaria: [
+    { arquivo: "Tomas.png" },
+    { arquivo: "Layla.png" },
+  ],
+};
+
+// Lesson-specific character overrides
+const PERSONAGEM_POR_SLUG: Record<string, { arquivo: string; video?: string }> = {
+  "vida-secreta-das-plantas": { arquivo: "Sofia_experiencias.png" },
+};
+
+const FRASES_ACERTO = ["Muito bem!", "Acertaste!", "Excelente!"];
+const FRASES_ERRO = ["Quase!", "Tenta de novo!", "Não desistas!"];
+
+function getPersonagem(slug: string, dimensaoSlug: string, questionIndex: number) {
+  if (PERSONAGEM_POR_SLUG[slug]) return PERSONAGEM_POR_SLUG[slug];
+  const pool = PERSONAGENS_POR_DIMENSAO[dimensaoSlug] ?? PERSONAGENS_POR_DIMENSAO.identitaria;
+  return pool[questionIndex % pool.length];
+}
+
 interface PageProps {
   params: { slug: string };
 }
@@ -333,6 +374,11 @@ export default function ExerciciosPage({ params }: PageProps) {
   const exercicio = exercicios[atual];
   const total = exercicios.length;
   const correta = selecionada === exercicio.correta;
+
+  const personagem = getPersonagem(slug, dim.slug, atual);
+  const fraseFeedback = correta
+    ? FRASES_ACERTO[atual % FRASES_ACERTO.length]
+    : FRASES_ERRO[atual % FRASES_ERRO.length];
 
   const confirmar = () => {
     if (selecionada === null) return;
@@ -594,38 +640,97 @@ export default function ExerciciosPage({ params }: PageProps) {
           })}
         </div>
 
-        {/* Feedback after answer */}
+        {/* Feedback after answer — character + encouragement */}
         {confirmada && (
           <div
             style={{
-              padding: "16px 20px",
-              borderRadius: "16px",
-              background: correta ? "rgba(74,222,128,0.08)" : "rgba(250,204,21,0.08)",
-              border: `1px solid ${correta ? "rgba(74,222,128,0.3)" : "rgba(250,204,21,0.3)"}`,
+              display: "flex",
+              alignItems: "flex-end",
+              gap: "12px",
               marginBottom: "20px",
               animation: "fadeIn 0.3s ease",
             }}
           >
-            <p
+            {/* Character */}
+            <div
               style={{
-                fontSize: "13px",
-                fontWeight: 700,
-                color: correta ? "#2d5c3a" : "#854f0b",
-                marginBottom: "4px",
+                position: "relative",
+                width: "90px",
+                height: "130px",
+                flexShrink: 0,
+                overflow: "hidden",
               }}
             >
-              {correta ? "Muito bem!" : "Quase lá ~"}
-            </p>
-            <p
+              {personagem.video ? (
+                <video
+                  src={`/assets/personagens/${personagem.video}`}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: "bottom center",
+                  }}
+                />
+              ) : (
+                <img
+                  src={`/assets/personagens/${personagem.arquivo}`}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: "bottom center",
+                  }}
+                />
+              )}
+              {/* Gradient mask to blend dark image background with page */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "radial-gradient(ellipse 90% 80% at 50% 55%, transparent 30%, #f5f2ec 80%), " +
+                    "linear-gradient(to top, #f5f2ec 0%, transparent 45%)",
+                  pointerEvents: "none",
+                }}
+              />
+            </div>
+
+            {/* Feedback card */}
+            <div
               style={{
-                fontSize: "13px",
-                fontWeight: 600,
-                color: "var(--texto-principal)",
-                opacity: 0.8,
+                flex: 1,
+                padding: "16px",
+                borderRadius: "16px",
+                background: correta ? "rgba(74,222,128,0.08)" : "rgba(250,204,21,0.08)",
+                border: `1px solid ${correta ? "rgba(74,222,128,0.3)" : "rgba(250,204,21,0.3)"}`,
               }}
             >
-              {exercicio.explicacao}
-            </p>
+              <p
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: correta ? "#2d5c3a" : "#854f0b",
+                  marginBottom: "4px",
+                }}
+              >
+                {fraseFeedback}
+              </p>
+              <p
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "var(--texto-principal)",
+                  opacity: 0.8,
+                }}
+              >
+                {exercicio.explicacao}
+              </p>
+            </div>
           </div>
         )}
 
