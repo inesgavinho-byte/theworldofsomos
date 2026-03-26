@@ -8,7 +8,7 @@ const LICOES = [
   { slug: "sistema-solar", titulo: "O Sistema Solar", dimensao: "Lógica", cor: "#60a5fa" },
   { slug: "a-zona-certa", titulo: "A Zona Certa", dimensao: "Identitária", cor: "#a78bfa" },
   { slug: "cerebro-desafios", titulo: "Cérebro e Desafios", dimensao: "Identitária", cor: "#a78bfa" },
-  { slug: "o-proposito", titulo: "O Propósito", dimensao: "Emocional", cor: "#facc15" },
+  { slug: "o-proposito", titulo: "O Propósito", dimensao: "Social", cor: "#facc15" },
   { slug: "como-aprender", titulo: "Como Aprender", dimensao: "Lógica", cor: "#60a5fa" },
 ];
 
