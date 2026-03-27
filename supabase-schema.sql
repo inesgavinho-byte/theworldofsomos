@@ -38,7 +38,9 @@ CREATE TABLE IF NOT EXISTS criancas (
   curriculo text DEFAULT 'PT' CHECK (curriculo IN ('PT', 'BNCC', 'Cambridge', 'IB', 'FR', 'outro')),
   ano_escolar text,
   pais text,
-  estilo_aprendizagem text
+  estilo_aprendizagem text,
+  pin text,
+  user_id uuid REFERENCES auth.users
 );
 
 -- Competências
@@ -319,3 +321,9 @@ where dimensao in ('naturalista', 'logica', 'artistica');
 -- Excepção: lições Naturalista sobre planeta/ecologia são universais
 update competencias set tipo = 'universal'
 where area in ('ecologia', 'planeta', 'ambiente', 'natureza-global');
+
+-- ============================================
+-- Migration: PIN de criança
+-- ============================================
+ALTER TABLE criancas ADD COLUMN IF NOT EXISTS pin text;
+ALTER TABLE criancas ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users;
