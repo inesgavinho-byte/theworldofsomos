@@ -508,7 +508,7 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
                   }}
                 >
                   <p style={{ fontSize: "13px", fontWeight: 700, opacity: 0.7 }}>
-                    + Adicionar filho
+                    + Adicionar criança
                   </p>
                 </div>
               </Link>

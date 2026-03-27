@@ -5,7 +5,7 @@ const PILARES = [
     numero: "01",
     titulo: "Diagnóstico",
     descricao:
-      "Onde está o meu filho realmente? Mapeamento de competências universal, independente da escola.",
+      "Onde está a minha criança realmente? Mapeamento de competências universal, independente da escola.",
     cor: "#a78bfa",
     corCard: "#2a2250",
   },
@@ -13,7 +13,7 @@ const PILARES = [
     numero: "02",
     titulo: "Adaptação",
     descricao:
-      "Como é que o meu filho aprende melhor? Detectar padrões, preferências e sinais de neurodivergência.",
+      "Como é que a minha criança aprende melhor? Detectar padrões, preferências e sinais de neurodivergência.",
     cor: "#4ade80",
     corCard: "#1e3d28",
   },
@@ -165,8 +165,8 @@ export default function LandingPage() {
             lineHeight: 1.6,
           }}
         >
-          O SOMOS devolve aos pais as ferramentas para entenderem e apoiarem o
-          filho, independentemente da escola que frequenta.
+          O SOMOS devolve às famílias as ferramentas para entenderem e apoiarem
+          a criança, independentemente da escola que frequenta.
         </p>
 
         <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>

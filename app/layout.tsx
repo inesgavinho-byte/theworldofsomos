@@ -6,7 +6,7 @@ import StarField from "@/components/StarField";
 export const metadata: Metadata = {
   title: "SOMOS — Plataforma de Continuidade Educativa Familiar",
   description:
-    "Devolve aos pais as ferramentas para entenderem e apoiarem o filho, independentemente da escola.",
+    "Devolve às famílias as ferramentas para entenderem e apoiarem as crianças, independentemente da escola.",
 };
 
 export default function RootLayout({
