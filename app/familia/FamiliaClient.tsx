@@ -312,7 +312,7 @@ export default function FamiliaClient({
                 >
                   {tipo === "pai"
                     ? "Para quando não estão juntos — a criança responde quando quiser"
-                    : "Vê os desafios que o teu pai te deixou"}
+                    : "Vê os desafios que a tua família te deixou"}
                 </p>
               </div>
               <div

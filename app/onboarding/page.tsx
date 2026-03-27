@@ -7,17 +7,26 @@ import { CURRICULOS_CONFIG, type CodigoCurriculo, formatAnoEscolar } from "@/lib
 
 const CURRICULOS_LIST: CodigoCurriculo[] = ["PT", "BNCC", "Cambridge", "IB", "FR"];
 
+const PAPEIS = [
+  { valor: "mae", label: "Mãe" },
+  { valor: "pai", label: "Pai" },
+  { valor: "avo", label: "Avó / Avô" },
+  { valor: "irmao", label: "Irmão / Irmã" },
+  { valor: "outro", label: "Outro familiar" },
+] as const;
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [nome, setNome] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
+  const [papel, setPapel] = useState("");
   const [curriculo, setCurriculo] = useState<CodigoCurriculo>("PT");
   const [anoEscolar, setAnoEscolar] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const totalSteps = 3;
+  const totalSteps = 4;
   const curriculoConfig = CURRICULOS_CONFIG[curriculo];
 
   const handleCurriculoChange = (c: CodigoCurriculo) => {
@@ -71,7 +80,7 @@ export default function OnboardingPage() {
       await supabase.from("familia_membros").insert({
         familia_id: novaFamilia.id,
         profile_id: user.id,
-        papel: "pai",
+        papel: papel || "outro",
       });
 
       membro = { familia_id: novaFamilia.id };
@@ -118,7 +127,8 @@ export default function OnboardingPage() {
   };
 
   const canProceedStep1 = nome.trim().length > 0;
-  const canProceedStep2 = anoEscolar.length > 0;
+  const canProceedStep2 = papel.length > 0;
+  const canProceedStep3 = anoEscolar.length > 0;
 
   return (
     <div
@@ -139,7 +149,7 @@ export default function OnboardingPage() {
             SOMOS
           </h1>
           <p style={{ fontSize: "14px", color: "var(--texto-secundario)", marginTop: "4px", fontWeight: 600 }}>
-            Vamos criar o perfil do teu filho
+            {nome ? `Vamos criar o perfil de ${nome}` : "Vamos criar um novo perfil"}
           </p>
         </div>
 
@@ -175,7 +185,7 @@ export default function OnboardingPage() {
                 Como se chama?
               </h2>
               <div>
-                <label style={labelStyle}>Nome do filho</label>
+                <label style={labelStyle}>Nome da criança</label>
                 <input
                   type="text"
                   value={nome}
@@ -197,8 +207,44 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── Passo 2: Sistema de ensino + ano escolar ── */}
+          {/* ── Passo 2: Relação com a criança ── */}
           {step === 2 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <h2 className="font-editorial" style={{ fontSize: "24px", fontWeight: 500 }}>
+                Qual é a tua relação com {nome || "a criança"}?
+              </h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {PAPEIS.map((p) => {
+                  const isSelected = papel === p.valor;
+                  return (
+                    <button
+                      key={p.valor}
+                      onClick={() => setPapel(p.valor)}
+                      style={{
+                        padding: "12px 14px",
+                        borderRadius: "12px",
+                        border: isSelected
+                          ? "1.5px solid var(--roxo-tint)"
+                          : "1.5px solid rgba(160,144,128,0.25)",
+                        background: isSelected ? "rgba(167,139,250,0.1)" : "white",
+                        fontFamily: "Nunito, sans-serif",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        cursor: "none",
+                        color: isSelected ? "var(--roxo-texto)" : "var(--texto-principal)",
+                        textAlign: "left",
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Passo 3: Sistema de ensino + ano escolar ── */}
+          {step === 3 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <h2 className="font-editorial" style={{ fontSize: "24px", fontWeight: 500 }}>
                 Sistema de ensino
@@ -278,8 +324,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── Passo 3: Confirmação ── */}
-          {step === 3 && (
+          {/* ── Passo 4: Confirmação ── */}
+          {step === 4 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <h2 className="font-editorial" style={{ fontSize: "24px", fontWeight: 500 }}>
                 Tudo certo!
@@ -382,9 +428,10 @@ export default function OnboardingPage() {
                 onClick={() => {
                   if (step === 1 && !canProceedStep1) return;
                   if (step === 2 && !canProceedStep2) return;
+                  if (step === 3 && !canProceedStep3) return;
                   setStep((s) => s + 1);
                 }}
-                disabled={(step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2)}
+                disabled={(step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2) || (step === 3 && !canProceedStep3)}
                 style={{
                   flex: 2,
                   background: "var(--texto-principal)",
@@ -396,7 +443,7 @@ export default function OnboardingPage() {
                   fontWeight: 800,
                   fontFamily: "Nunito, sans-serif",
                   cursor: "none",
-                  opacity: (step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2) ? 0.4 : 1,
+                  opacity: (step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2) || (step === 3 && !canProceedStep3) ? 0.4 : 1,
                 }}
               >
                 Continuar
