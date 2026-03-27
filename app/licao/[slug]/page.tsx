@@ -58,26 +58,31 @@ const LICOES_INFO: Record<string, { titulo: string; descricao: string; duracao: 
     titulo: "As Palavras que Voam",
     descricao: "Uma criança descobre que as palavras têm poderes diferentes — algumas descrevem, outras acção, outras ligam ideias. Adjectivos, verbos e conjunções numa aventura narrativa.",
     duracao: "10 min",
+    questoes: 5,
   },
   "o-mapa-dos-numeros": {
     titulo: "O Mapa dos Números",
     descricao: "Uma exploradora encontra um mapa antigo cheio de números misteriosos. Para desvendar os seus segredos, tem de perceber padrões, multiplicações e divisões simples.",
     duracao: "10 min",
+    questoes: 5,
   },
   "a-vida-secreta-das-plantas": {
     titulo: "A Vida Secreta das Plantas",
     descricao: "As plantas respiram de forma diferente dos animais. Descobre a fotossíntese, as partes da planta e o ciclo da água numa aventura pelo mundo vegetal.",
     duracao: "10 min",
+    questoes: 5,
   },
   "a-aventura-em-ingles": {
     titulo: "The Big Adventure",
     descricao: "Um robot chamado Beep chega a Portugal e não fala português. Ajuda-o a aprender palavras essenciais — cores, números, animais e acções do dia-a-dia.",
     duracao: "10 min",
+    questoes: 5,
   },
   "os-descobrimentos": {
     titulo: "Os Descobrimentos",
     descricao: "Portugal, pequeno país na ponta da Europa, teve uma ideia enorme: atravessar o oceano. Caravelas, Vasco da Gama e um mundo que mudou para sempre.",
     duracao: "10 min",
+    questoes: 5,
   },
   // Lições universais
   "as-emocoes-sao-dados": {
@@ -99,30 +104,35 @@ const LICOES_INFO: Record<string, { titulo: string; descricao: string; duracao: 
     questoes: 5,
   },
   // Novas lições — 3.º/4.º ano PT
-  "palavras-que-voam": {
+  "palavras-que-voam-2": {
     titulo: "As Palavras que Voam",
     descricao: "Uma criança descobre que as palavras têm superpotências diferentes — algumas descrevem, outras mostram acção, outras ainda ligam ideias. Adjectivos, verbos e conjunções ganham vida numa aventura de linguagem.",
     duracao: "12 min",
+    questoes: 5,
   },
-  "o-mapa-dos-numeros": {
+  "o-mapa-dos-numeros-2": {
     titulo: "O Mapa dos Números",
     descricao: "Uma exploradora encontra um mapa antigo cheio de números misteriosos. Para desvendar os segredos do mapa, tem de perceber padrões, multiplicações e divisões simples.",
     duracao: "14 min",
+    questoes: 5,
   },
-  "a-vida-secreta-das-plantas": {
+  "a-vida-secreta-das-plantas-2": {
     titulo: "A Vida Secreta das Plantas",
     descricao: "Uma criança descobre que as plantas respiram de forma diferente dos animais. De dia fazem fotossíntese, de noite respiram. Explora as partes da planta e o ciclo da água.",
     duracao: "13 min",
+    questoes: 5,
   },
-  "a-aventura-em-ingles": {
+  "a-aventura-em-ingles-2": {
     titulo: "The Big Adventure",
     descricao: "Um robot chamado Beep chega a Portugal e não fala português. Ajuda-o a aprender palavras essenciais do dia-a-dia — cores, animais, acções e estados emocionais.",
     duracao: "11 min",
+    questoes: 5,
   },
-  "os-descobrimentos": {
+  "os-descobrimentos-2": {
     titulo: "Os Descobrimentos",
     descricao: "Portugal, pequeno país na ponta da Europa, teve uma ideia enorme: e se atravessássemos o oceano? A história das caravelas, de Vasco da Gama e do que os portugueses encontraram.",
     duracao: "15 min",
+    questoes: 5,
   },
 };
 
