@@ -298,3 +298,27 @@ a {
     color: inherit;
   }
 }
+
+/* Landing page */
+@keyframes scrollBounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(8px); }
+}
+
+.scroll-arrow {
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+
+.cta-btn {
+  transition: background 0.3s ease;
+}
+
+.cta-btn:hover {
+  background: #a78bfa !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-arrow {
+    animation: none !important;
+  }
+}

@@ -1,351 +1,632 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+
+/* ── helpers ──────────────────────────────────────────────────────────── */
+
+function useReveal(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return { ref, visible };
+}
+
+function useTypewriter(
+  text: string,
+  started: boolean,
+  delay = 40,
+  prefersReduced = false
+) {
+  const [displayed, setDisplayed] = useState("");
+
+  useEffect(() => {
+    if (prefersReduced) {
+      setDisplayed(text);
+      return;
+    }
+    if (!started) return;
+    setDisplayed("");
+    let i = 0;
+    const id = setInterval(() => {
+      if (i < text.length) {
+        setDisplayed(text.slice(0, i + 1));
+        i++;
+      } else {
+        clearInterval(id);
+      }
+    }, delay);
+    return () => clearInterval(id);
+  }, [text, started, delay, prefersReduced]);
+
+  return displayed;
+}
+
+/* ── constants ────────────────────────────────────────────────────────── */
 
 const PILARES = [
-  {
-    numero: "01",
-    titulo: "Diagnóstico",
-    descricao:
-      "Onde está a minha criança realmente? Mapeamento de competências universal, independente da escola.",
-    cor: "#a78bfa",
-    corCard: "#2a2250",
-  },
-  {
-    numero: "02",
-    titulo: "Adaptação",
-    descricao:
-      "Como é que a minha criança aprende melhor? Detectar padrões, preferências e sinais de neurodivergência.",
-    cor: "#4ade80",
-    corCard: "#1e3d28",
-  },
-  {
-    numero: "03",
-    titulo: "Família",
-    descricao:
-      "Como posso eu ajudar? Ferramentas para pais, avós e irmãos participarem na jornada.",
-    cor: "#facc15",
-    corCard: "#2a1f0a",
-  },
+  "Sei onde estou.",
+  "Descubro quem sou.",
+  "Tenho quem me apoie.",
+  "Sei de onde venho.",
 ];
 
+const MOMENTO_TEXT =
+  '"Há 2500 anos, Sócrates foi condenado\nà morte por fazer perguntas.\n\nHoje fizeste o mesmo."';
+
+/* ── styles ───────────────────────────────────────────────────────────── */
+
+const CG = "'Cormorant Garamond', serif";
+const NU = "'Nunito', sans-serif";
+
+/* ── component ────────────────────────────────────────────────────────── */
+
 export default function LandingPage() {
+  const [heroVisible, setHeroVisible] = useState(false);
+  const [prefersReduced, setPrefersReduced] = useState(false);
+
+  const s2 = useReveal();
+  const s3 = useReveal();
+  const s4 = useReveal();
+  const s5 = useReveal();
+  const s6 = useReveal();
+
+  const momentoText = useTypewriter(
+    MOMENTO_TEXT,
+    s5.visible,
+    40,
+    prefersReduced
+  );
+  const momentoDone = momentoText.length >= MOMENTO_TEXT.length;
+
+  useEffect(() => {
+    setHeroVisible(true);
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReduced(mq.matches);
+  }, []);
+
+  function reveal(
+    visible: boolean,
+    delay = 0
+  ): React.CSSProperties {
+    if (prefersReduced) return {};
+    return {
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(20px)",
+      transition: `opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
+    };
+  }
+
   return (
-    <div
+    <main
       style={{
-        minHeight: "100vh",
         position: "relative",
         zIndex: 1,
         background: "var(--fundo-pai)",
       }}
     >
-      {/* Nav */}
-      <nav
+      {/* ── fixed logo ──────────────────────────────────────────────── */}
+      <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "20px 40px",
-          maxWidth: "1100px",
-          margin: "0 auto",
+          position: "fixed",
+          top: "24px",
+          left: "32px",
+          zIndex: 100,
         }}
       >
-        <h1
-          className="font-editorial"
-          style={{ fontSize: "26px", fontWeight: 500 }}
-        >
-          SOMOS
-        </h1>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <Link href="/leituras">
-            <span
-              style={{
-                fontSize: "13px",
-                fontWeight: 700,
-                color: "var(--texto-secundario)",
-              }}
-            >
-              Leituras
-            </span>
-          </Link>
-          <Link href="/login">
-            <button
-              style={{
-                background: "transparent",
-                border: "1.5px solid rgba(160,144,128,0.4)",
-                borderRadius: "10px",
-                padding: "7px 16px",
-                fontSize: "13px",
-                fontWeight: 700,
-                fontFamily: "Nunito, sans-serif",
-                color: "var(--texto-principal)",
-                cursor: "none",
-              }}
-            >
-              Entrar
-            </button>
-          </Link>
-          <Link href="/register">
-            <button
-              style={{
-                background: "var(--texto-principal)",
-                border: "none",
-                borderRadius: "10px",
-                padding: "8px 18px",
-                fontSize: "13px",
-                fontWeight: 800,
-                fontFamily: "Nunito, sans-serif",
-                color: "white",
-                cursor: "none",
-              }}
-            >
-              Começar
-            </button>
-          </Link>
-        </div>
-      </nav>
+        <Link href="/login">
+          <span
+            style={{
+              fontFamily: CG,
+              fontSize: "14px",
+              fontWeight: 400,
+              letterSpacing: "0.4em",
+              textTransform: "uppercase",
+              color: "var(--texto-principal)",
+            }}
+          >
+            SOMOS
+          </span>
+        </Link>
+      </div>
 
-      {/* Hero */}
+      {/* ── HERO ────────────────────────────────────────────────────── */}
       <section
         style={{
-          maxWidth: "1100px",
-          margin: "0 auto",
-          padding: "80px 40px 60px",
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          padding: "0 24px",
+          position: "relative",
+        }}
+      >
+        {/* Logo mark */}
+        <div
+          style={{
+            marginBottom: "56px",
+            opacity: heroVisible ? 1 : 0,
+            transition: prefersReduced ? "none" : "opacity 0.8s ease",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: CG,
+              fontSize: "14px",
+              fontWeight: 400,
+              letterSpacing: "0.4em",
+              textTransform: "uppercase",
+              color: "var(--texto-principal)",
+            }}
+          >
+            SOMOS
+          </span>
+        </div>
+
+        {/* Main headline */}
+        <div
+          style={{
+            marginBottom: "28px",
+            opacity: heroVisible ? 1 : 0,
+            transform: heroVisible ? "translateY(0)" : "translateY(14px)",
+            transition: prefersReduced
+              ? "none"
+              : "opacity 0.8s ease 1.2s, transform 0.8s ease 1.2s",
+          }}
+        >
+          <h1
+            style={{
+              fontFamily: CG,
+              fontSize: "clamp(28px, 5vw, 42px)",
+              fontWeight: 300,
+              fontStyle: "italic",
+              lineHeight: 1.4,
+              color: "var(--texto-principal)",
+              maxWidth: "600px",
+              margin: 0,
+            }}
+          >
+            Os nossos filhos vão herdar um mundo
+            <br />
+            que não conseguimos prever.
+          </h1>
+        </div>
+
+        {/* Sub-headline */}
+        <div
+          style={{
+            opacity: heroVisible ? 1 : 0,
+            transition: prefersReduced ? "none" : "opacity 0.8s ease 2s",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: NU,
+              fontSize: "16px",
+              fontWeight: 400,
+              color: "var(--texto-secundario)",
+              maxWidth: "420px",
+              margin: 0,
+              lineHeight: 1.75,
+            }}
+          >
+            Há 300 000 anos que sobrevivemos a tudo.
+            <br />
+            Desta vez não vai ser diferente.
+          </p>
+        </div>
+
+        {/* Scroll arrow */}
+        <div
+          className="scroll-arrow"
+          style={{
+            position: "absolute",
+            bottom: "40px",
+            left: "50%",
+            opacity: heroVisible ? 1 : 0,
+            transition: prefersReduced ? "none" : "opacity 0.8s ease 2.6s",
+          }}
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--texto-secundario)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <polyline points="5 13 12 19 19 13" />
+          </svg>
+        </div>
+      </section>
+
+      {/* ── SECTION 2 — A VERDADE ───────────────────────────────────── */}
+      <section
+        style={{
+          background: "var(--fundo-pai)",
+          padding: "120px 24px",
           textAlign: "center",
         }}
       >
         <div
+          ref={s2.ref}
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            background: "rgba(167,139,250,0.1)",
-            border: "1px solid rgba(167,139,250,0.25)",
-            padding: "6px 16px",
-            borderRadius: "999px",
-            fontSize: "12px",
-            fontWeight: 700,
-            color: "var(--roxo-texto)",
-            marginBottom: "28px",
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
+            maxWidth: "640px",
+            margin: "0 auto",
+            ...reveal(s2.visible),
           }}
         >
-          <div
+          <p
             style={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              background: "var(--roxo-tint)",
+              fontFamily: CG,
+              fontStyle: "italic",
+              fontSize: "13px",
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              color: "var(--texto-secundario)",
+              margin: "0 0 24px",
             }}
-          />
-          Plataforma de continuidade educativa familiar
-        </div>
+          >
+            A ESCOLA NÃO É O PROBLEMA
+          </p>
 
-        <h2
-          className="font-editorial"
-          style={{
-            fontSize: "clamp(44px, 6vw, 80px)",
-            fontWeight: 500,
-            lineHeight: 1.05,
-            maxWidth: "800px",
-            margin: "0 auto 28px",
-            letterSpacing: "-1px",
-          }}
-        >
-          A aprendizagem não começa{" "}
-          <span style={{ fontStyle: "italic" }}>nem termina</span> na escola.
-        </h2>
+          <h2
+            style={{
+              fontFamily: CG,
+              fontSize: "36px",
+              fontWeight: 300,
+              color: "var(--texto-principal)",
+              lineHeight: 1.35,
+              margin: "0 0 40px",
+            }}
+          >
+            O problema é acreditarmos
+            <br />
+            que a escola chega.
+          </h2>
 
-        <p
-          style={{
-            fontSize: "18px",
-            color: "var(--texto-secundario)",
-            fontWeight: 600,
-            maxWidth: "540px",
-            margin: "0 auto 40px",
-            lineHeight: 1.6,
-          }}
-        >
-          O SOMOS devolve às famílias as ferramentas para entenderem e apoiarem
-          a criança, independentemente da escola que frequenta.
-        </p>
-
-        <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-          <Link href="/register">
-            <button
-              style={{
-                background: "var(--texto-principal)",
-                color: "white",
-                border: "none",
-                borderRadius: "14px",
-                padding: "16px 32px",
-                fontSize: "15px",
-                fontWeight: 800,
-                fontFamily: "Nunito, sans-serif",
-                cursor: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              Começar gratuitamente
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M5 12H19M13 6L19 12L13 18"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </Link>
-          <Link href="/leituras">
-            <button
-              style={{
-                background: "transparent",
-                color: "var(--texto-principal)",
-                border: "1.5px solid rgba(160,144,128,0.3)",
-                borderRadius: "14px",
-                padding: "16px 24px",
-                fontSize: "15px",
-                fontWeight: 700,
-                fontFamily: "Nunito, sans-serif",
-                cursor: "none",
-              }}
-            >
-              Ler o blog
-            </button>
-          </Link>
+          <p
+            style={{
+              fontFamily: NU,
+              fontSize: "17px",
+              fontWeight: 400,
+              color: "var(--texto-secundario)",
+              lineHeight: 1.85,
+              margin: 0,
+            }}
+          >
+            A escola prepara para os exames.
+            <br />
+            Nós preparamos para a vida.
+            <br />
+            Não como alternativa — como complemento.
+            <br />
+            O que a escola não tem tempo de ensinar:
+            <br />
+            quem és, de onde vens, para onde podes ir.
+          </p>
         </div>
       </section>
 
-      {/* Três pilares */}
+      {/* ── SECTION 3 — OS QUATRO PILARES ──────────────────────────── */}
       <section
         style={{
-          maxWidth: "1100px",
-          margin: "0 auto",
-          padding: "20px 40px 80px",
+          background: "#e8e4dc",
+          padding: "100px 24px",
+          textAlign: "center",
         }}
       >
-        <p
-          style={{
-            fontSize: "12px",
-            fontWeight: 700,
-            color: "var(--texto-secundario)",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            marginBottom: "24px",
-          }}
-        >
-          Como funciona
-        </p>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "16px",
-          }}
-        >
-          {PILARES.map((pilar) => (
-            <div
-              key={pilar.numero}
-              style={{
-                background: pilar.corCard,
-                borderRadius: "20px",
-                padding: "28px",
-                color: "white",
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              <span
-                style={{
-                  position: "absolute",
-                  top: "12px",
-                  right: "16px",
-                  fontSize: "64px",
-                  fontWeight: 900,
-                  fontFamily: "Nunito, sans-serif",
-                  color: "rgba(255,255,255,0.04)",
-                  lineHeight: 1,
-                }}
-              >
-                {pilar.numero}
-              </span>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "12px",
-                  background: `${pilar.cor}25`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "16px",
-                }}
-              >
-                <div
-                  style={{
-                    width: "12px",
-                    height: "12px",
-                    borderRadius: "50%",
-                    background: pilar.cor,
-                  }}
-                />
-              </div>
-              <h3
-                className="font-editorial"
-                style={{
-                  fontSize: "24px",
-                  fontWeight: 500,
-                  marginBottom: "10px",
-                }}
-              >
-                {pilar.titulo}
-              </h3>
+        <div ref={s3.ref}>
+          <p
+            style={{
+              fontFamily: CG,
+              fontStyle: "italic",
+              fontSize: "13px",
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              color: "var(--texto-secundario)",
+              margin: "0 0 56px",
+              ...reveal(s3.visible),
+            }}
+          >
+            QUATRO PERGUNTAS. UMA PLATAFORMA.
+          </p>
+
+          <div style={{ maxWidth: "560px", margin: "0 auto" }}>
+            {PILARES.map((linha, i) => (
               <p
+                key={i}
                 style={{
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  opacity: 0.55,
+                  fontFamily: CG,
+                  fontStyle: "italic",
+                  fontSize: "clamp(22px, 4vw, 32px)",
+                  fontWeight: 300,
                   lineHeight: 1.6,
+                  color: "var(--texto-principal)",
+                  margin: "0 0 4px",
+                  opacity: s3.visible ? 1 : 0,
+                  transform: s3.visible ? "translateY(0)" : "translateY(20px)",
+                  transition: prefersReduced
+                    ? "none"
+                    : `opacity 0.7s ease ${300 + i * 120}ms, transform 0.7s ease ${300 + i * 120}ms`,
                 }}
               >
-                {pilar.descricao}
+                {linha}
               </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer
+      {/* ── SECTION 4 — O SONHO ─────────────────────────────────────── */}
+      <section
         style={{
-          borderTop: "1px solid rgba(160,144,128,0.15)",
-          padding: "24px 40px",
-          maxWidth: "1100px",
-          margin: "0 auto",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          background: "var(--fundo-pai)",
+          padding: "120px 24px",
+          textAlign: "center",
         }}
       >
-        <span
-          className="font-editorial"
-          style={{ fontSize: "18px", fontWeight: 500 }}
-        >
-          SOMOS
-        </span>
-        <p
+        <div
+          ref={s4.ref}
           style={{
-            fontSize: "12px",
-            color: "var(--texto-secundario)",
-            fontWeight: 600,
+            maxWidth: "560px",
+            margin: "0 auto",
+            ...reveal(s4.visible),
           }}
         >
-          © 2026 SOMOS — Plataforma de continuidade educativa familiar
+          <p
+            style={{
+              fontFamily: CG,
+              fontStyle: "italic",
+              fontSize: "13px",
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              color: "var(--texto-secundario)",
+              margin: "0 0 16px",
+            }}
+          >
+            A ÚNICA COISA QUE A MÁQUINA NÃO FAZ
+          </p>
+
+          <h2
+            style={{
+              fontFamily: CG,
+              fontSize: "clamp(32px, 5vw, 48px)",
+              fontWeight: 300,
+              color: "var(--texto-principal)",
+              margin: "0 0 40px",
+            }}
+          >
+            Sonhar.
+          </h2>
+
+          <p
+            style={{
+              fontFamily: NU,
+              fontSize: "17px",
+              fontWeight: 400,
+              color: "var(--texto-secundario)",
+              lineHeight: 1.85,
+              margin: 0,
+              whiteSpace: "pre-line",
+            }}
+          >
+            {`A inteligência artificial calcula.\nAprende. Optimiza. Executa.\n\nMas não sonha. Nunca sonhou.\nProvavelmente nunca vai sonhar.\n\nÉ a única capacidade irreplicável\nque os nossos filhos têm.\n\nO SOMOS existe para a proteger.\nE para a ampliar.`}
+          </p>
+        </div>
+      </section>
+
+      {/* ── SECTION 5 — O MOMENTO ───────────────────────────────────── */}
+      <section
+        style={{
+          background: "#1a1714",
+          padding: "100px 24px",
+          textAlign: "center",
+        }}
+      >
+        <div
+          ref={s5.ref}
+          style={{
+            maxWidth: "600px",
+            margin: "0 auto",
+            ...reveal(s5.visible),
+          }}
+        >
+          <p
+            style={{
+              fontFamily: CG,
+              fontStyle: "italic",
+              fontSize: "13px",
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.4)",
+              margin: "0 0 24px",
+            }}
+          >
+            NO FIM DE CADA SESSÃO
+          </p>
+
+          <h2
+            style={{
+              fontFamily: CG,
+              fontStyle: "italic",
+              fontSize: "38px",
+              fontWeight: 300,
+              color: "white",
+              margin: "0 0 40px",
+            }}
+          >
+            Os nossos filhos recebem um Momento.
+          </h2>
+
+          {/* Typewriter card */}
+          <div
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "4px",
+              padding: "32px",
+              marginBottom: "24px",
+              textAlign: "left",
+              minHeight: "168px",
+            }}
+          >
+            <p
+              style={{
+                fontFamily: CG,
+                fontStyle: "italic",
+                fontSize: "20px",
+                color: "white",
+                lineHeight: 1.7,
+                margin: 0,
+                whiteSpace: "pre-line",
+              }}
+            >
+              {momentoText}
+              {s5.visible && !momentoDone && (
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: "1px",
+                    height: "1.1em",
+                    background: "#a78bfa",
+                    marginLeft: "2px",
+                    verticalAlign: "text-bottom",
+                    animation: "cursorBlink 0.7s ease-in-out infinite",
+                  }}
+                />
+              )}
+            </p>
+          </div>
+
+          <p
+            style={{
+              fontFamily: NU,
+              fontSize: "14px",
+              fontWeight: 400,
+              color: "rgba(255,255,255,0.4)",
+              margin: 0,
+              lineHeight: 1.65,
+            }}
+          >
+            Um fragmento real da história humana,
+            <br />
+            ligado ao que acabaram de aprender.
+          </p>
+        </div>
+      </section>
+
+      {/* ── SECTION 6 — CTA FINAL ───────────────────────────────────── */}
+      <section
+        style={{
+          background: "var(--fundo-pai)",
+          padding: "140px 24px",
+          textAlign: "center",
+        }}
+      >
+        <div
+          ref={s6.ref}
+          style={{ ...reveal(s6.visible) }}
+        >
+          <h2
+            style={{
+              fontFamily: CG,
+              fontSize: "clamp(34px, 5vw, 52px)",
+              fontWeight: 300,
+              color: "var(--texto-principal)",
+              margin: "0 0 16px",
+            }}
+          >
+            O fio 101 começa aqui.
+          </h2>
+
+          <p
+            style={{
+              fontFamily: NU,
+              fontSize: "16px",
+              fontWeight: 400,
+              color: "var(--texto-secundario)",
+              margin: "0 0 40px",
+            }}
+          >
+            7 dias gratuitos. Sem cartão de crédito.
+          </p>
+
+          <Link href="/register">
+            <button
+              className="cta-btn"
+              style={{
+                background: "#1a1714",
+                color: "white",
+                border: "none",
+                borderRadius: "2px",
+                padding: "16px 40px",
+                fontSize: "15px",
+                fontWeight: 700,
+                fontFamily: NU,
+                letterSpacing: "0.1em",
+                cursor: "none",
+              }}
+            >
+              COMEÇAR
+            </button>
+          </Link>
+
+          <p
+            style={{
+              fontFamily: NU,
+              fontSize: "13px",
+              fontWeight: 400,
+              color: "var(--texto-secundario)",
+              margin: "24px 0 0",
+            }}
+          >
+            Já somos família em Portugal, Brasil, Reino Unido e além.
+          </p>
+        </div>
+      </section>
+
+      {/* ── FOOTER ──────────────────────────────────────────────────── */}
+      <footer
+        style={{
+          background: "#1a1714",
+          padding: "32px 24px",
+          textAlign: "center",
+        }}
+      >
+        <p
+          style={{
+            fontFamily: NU,
+            fontSize: "13px",
+            fontWeight: 400,
+            color: "rgba(255,255,255,0.3)",
+            margin: 0,
+          }}
+        >
+          SOMOS · 2026 · theworldofsomos.netlify.app
         </p>
       </footer>
-    </div>
+    </main>
   );
 }
