@@ -79,6 +79,25 @@ const LICOES_INFO: Record<string, { titulo: string; descricao: string; duracao: 
     descricao: "Portugal, pequeno país na ponta da Europa, teve uma ideia enorme: atravessar o oceano. Caravelas, Vasco da Gama e um mundo que mudou para sempre.",
     duracao: "10 min",
   },
+  // Lições universais
+  "as-emocoes-sao-dados": {
+    titulo: "As Emoções são Dados",
+    descricao: "As emoções não são fraqueza — são informação. Quando sentes medo, o teu corpo está a dizer-te algo. Descobre o sistema de navegação interno que todos temos.",
+    duracao: "10",
+    questoes: 5,
+  },
+  "errar-e-parte-do-mapa": {
+    titulo: "Errar é Parte do Mapa",
+    descricao: "Nenhum explorador chegou a um lugar novo sem se perder pelo caminho. O erro não é o oposto do sucesso — é o caminho para ele.",
+    duracao: "10",
+    questoes: 5,
+  },
+  "o-planeta-e-a-nossa-casa": {
+    titulo: "O Planeta é a Nossa Casa",
+    descricao: "Não existe endereço mais preciso do que este: Terra, Sistema Solar, Via Láctea. Esta é a nossa casa. O que acontece quando não cuidamos dela?",
+    duracao: "10",
+    questoes: 5,
+  },
 };
 
 const DIM_BG: Record<DimKey, string> = {
