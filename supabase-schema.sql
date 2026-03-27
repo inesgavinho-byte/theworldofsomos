@@ -87,8 +87,21 @@ CREATE TABLE IF NOT EXISTS sessoes (
   tempo_ms int,
   reflexao_emocao text,
   reflexao_texto text,
+  titulo_licao text,
+  slug_licao text,
+  momento_historico text,
+  momento_crianca text,
+  momento_adulto text,
   created_at timestamptz DEFAULT now()
 );
+
+-- Migration: add momento + licao columns to existing sessoes table
+alter table sessoes
+  add column if not exists titulo_licao text,
+  add column if not exists slug_licao text,
+  add column if not exists momento_historico text,
+  add column if not exists momento_crianca text,
+  add column if not exists momento_adulto text;
 
 -- Gerações IA (upload de livros + exercícios gerados)
 CREATE TABLE IF NOT EXISTS geracoes_ia (

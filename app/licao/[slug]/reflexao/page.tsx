@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { getDimensaoBySlug } from "@/lib/dimensoes";
+import { getLicaoBySlug } from "@/lib/licoes";
+import { createClient } from "@/lib/supabase/client";
 import { Suspense } from "react";
 
 const EMOCOES = [
@@ -51,6 +52,12 @@ const EMOCOES = [
   },
 ];
 
+interface Momento {
+  momento_historico: string;
+  para_crianca: string;
+  para_adulto: string;
+}
+
 interface PageProps {
   params: { slug: string };
 }
@@ -59,6 +66,7 @@ function ReflexaoContent({ slug }: { slug: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dim = getDimensaoBySlug(slug);
+  const licao = getLicaoBySlug(slug);
 
   const respostasStr = searchParams.get("respostas") ?? "";
   const estrelasTotal = parseInt(searchParams.get("estrelas") ?? "0");
@@ -71,12 +79,68 @@ function ReflexaoContent({ slug }: { slug: string }) {
   const [reflexao, setReflexao] = useState("");
   const [guardado, setGuardado] = useState(false);
 
+  const [momento, setMomento] = useState<Momento | null>(null);
+  const [momentoLoading, setMomentoLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchMomento() {
+      try {
+        const res = await fetch("/api/momento", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            titulo_licao: licao?.titulo ?? slug,
+            tema: licao?.subtitulo ?? slug,
+            dimensao: licao?.dimensao ?? dim.nome,
+          }),
+        });
+        const json = await res.json();
+        if (json.sucesso && json.momento) {
+          setMomento(json.momento);
+        }
+      } catch {
+        // Silently fail — the block simply won't render
+      } finally {
+        setMomentoLoading(false);
+      }
+    }
+    fetchMomento();
+  }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleGuardar = async () => {
     setGuardado(true);
-    // Would save to Supabase here
+
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: crianca } = await supabase
+          .from("criancas")
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
+
+        if (crianca) {
+          await supabase.from("sessoes").insert({
+            crianca_id: crianca.id,
+            slug_licao: slug,
+            titulo_licao: licao?.titulo ?? slug,
+            reflexao_emocao: emocaoSelecionada,
+            reflexao_texto: reflexao || null,
+            momento_historico: momento?.momento_historico ?? null,
+            momento_crianca: momento?.para_crianca ?? null,
+            momento_adulto: momento?.para_adulto ?? null,
+          });
+        }
+      }
+    } catch {
+      // Non-blocking — navigate regardless
+    }
+
     setTimeout(() => {
       router.push("/crianca/dashboard");
-    }, 800);
+    }, 600);
   };
 
   return (
@@ -383,6 +447,100 @@ function ReflexaoContent({ slug }: { slug: string }) {
           />
         </div>
 
+        {/* UM MOMENTO DA HISTÓRIA */}
+        {(momentoLoading || momento) && (
+          <div
+            style={{
+              marginBottom: "20px",
+            }}
+          >
+            {/* Separador */}
+            <div
+              style={{
+                height: "1px",
+                background: "rgba(160,144,128,0.2)",
+                marginBottom: "20px",
+              }}
+            />
+
+            {momentoLoading ? (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "24px",
+                  opacity: 0.5,
+                }}
+              >
+                <div
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    border: `2px solid ${dim.cor}40`,
+                    borderTop: `2px solid ${dim.cor}`,
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite",
+                  }}
+                />
+                <p
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "var(--texto-secundario)",
+                  }}
+                >
+                  A procurar na história...
+                </p>
+              </div>
+            ) : momento ? (
+              <div>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 800,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "var(--texto-secundario)",
+                    marginBottom: "14px",
+                    opacity: 0.6,
+                  }}
+                >
+                  Um momento da história
+                </p>
+
+                <p
+                  className="font-editorial"
+                  style={{
+                    fontSize: "22px",
+                    fontStyle: "italic",
+                    fontWeight: 400,
+                    lineHeight: 1.5,
+                    color: "var(--texto-principal)",
+                    marginBottom: "14px",
+                  }}
+                >
+                  {momento.para_crianca}
+                </p>
+
+                <p
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "var(--texto-secundario)",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {momento.para_adulto}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        )}
+
         {/* CTA */}
         <button
           onClick={handleGuardar}
@@ -414,6 +572,12 @@ function ReflexaoContent({ slug }: { slug: string }) {
           )}
         </button>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
