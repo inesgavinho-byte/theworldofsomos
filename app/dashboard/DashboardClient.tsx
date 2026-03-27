@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useState, useRef } from "react";
 import { getCurriculoConfig, formatAnoEscolar } from "@/lib/curriculo";
 
 const LICOES = [
@@ -143,6 +144,104 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
   const licaoHoje = LICOES[0];
   const outrasLicoes = LICOES.slice(1, 5);
 
+  // PIN modal state
+  const [pinModal, setPinModal] = useState<{ criancaId: string; nome: string } | null>(null);
+  const [pinDigits, setPinDigits] = useState(["", "", "", ""]);
+  const [pinConfirm, setPinConfirm] = useState(["", "", "", ""]);
+  const [pinStep, setPinStep] = useState<"entrada" | "confirmacao">("entrada");
+  const [pinLoading, setPinLoading] = useState(false);
+  const [pinError, setPinError] = useState("");
+  const [pinSuccess, setPinSuccess] = useState(false);
+  const pinRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const confirmRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const openPinModal = (criancaId: string, nome: string) => {
+    setPinModal({ criancaId, nome });
+    setPinDigits(["", "", "", ""]);
+    setPinConfirm(["", "", "", ""]);
+    setPinStep("entrada");
+    setPinError("");
+    setPinSuccess(false);
+    setTimeout(() => pinRefs.current[0]?.focus(), 80);
+  };
+
+  const closePinModal = () => {
+    setPinModal(null);
+    setPinDigits(["", "", "", ""]);
+    setPinConfirm(["", "", "", ""]);
+    setPinStep("entrada");
+    setPinError("");
+    setPinSuccess(false);
+  };
+
+  const handlePinDigit = (
+    index: number,
+    value: string,
+    digits: string[],
+    setDigits: (d: string[]) => void,
+    refs: React.MutableRefObject<(HTMLInputElement | null)[]>,
+    onComplete?: (pin: string) => void
+  ) => {
+    if (!/^\d*$/.test(value)) return;
+    const next = [...digits];
+    next[index] = value.slice(-1);
+    setDigits(next);
+    if (value && index < 3) refs.current[index + 1]?.focus();
+    if (next.every((d) => d !== "") && onComplete) onComplete(next.join(""));
+  };
+
+  const handlePinKeyDown = (
+    index: number,
+    e: React.KeyboardEvent,
+    digits: string[],
+    refs: React.MutableRefObject<(HTMLInputElement | null)[]>
+  ) => {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      refs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePinEntradaComplete = (pin: string) => {
+    setPinStep("confirmacao");
+    setPinError("");
+    setTimeout(() => confirmRefs.current[0]?.focus(), 80);
+  };
+
+  const handlePinConfirmComplete = async (confirmPin: string) => {
+    const pin = pinDigits.join("");
+    if (confirmPin !== pin) {
+      setPinError("Os PINs não coincidem. Tenta de novo.");
+      setPinConfirm(["", "", "", ""]);
+      setTimeout(() => confirmRefs.current[0]?.focus(), 80);
+      return;
+    }
+    if (!pinModal) return;
+    setPinLoading(true);
+    setPinError("");
+    try {
+      const res = await fetch("/api/definir-pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ criancaId: pinModal.criancaId, pin }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setPinError(json.erro ?? "Erro ao guardar o PIN.");
+        setPinConfirm(["", "", "", ""]);
+        setPinStep("entrada");
+        setPinDigits(["", "", "", ""]);
+        setTimeout(() => pinRefs.current[0]?.focus(), 80);
+      } else {
+        setPinSuccess(true);
+        setTimeout(() => closePinModal(), 1800);
+      }
+    } catch {
+      setPinError("Erro de ligação. Tenta de novo.");
+    } finally {
+      setPinLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -159,6 +258,126 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
         padding: "32px 24px",
       }}
     >
+      {/* PIN Modal */}
+      {pinModal && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) closePinModal(); }}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(26,23,20,0.45)",
+            backdropFilter: "blur(6px)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+          }}
+        >
+          <div
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              backdropFilter: "blur(20px)",
+              borderRadius: "24px",
+              padding: "36px",
+              width: "100%",
+              maxWidth: "360px",
+              border: "1px solid rgba(160,144,128,0.2)",
+              animation: "fadeIn 0.25s ease forwards",
+            }}
+          >
+            {/* Header */}
+            <div style={{ marginBottom: "24px" }}>
+              <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--texto-secundario)", marginBottom: "6px" }}>
+                {pinModal.nome}
+              </p>
+              <h2 className="font-editorial" style={{ fontSize: "24px", fontWeight: 500 }}>
+                {pinSuccess ? "PIN guardado!" : pinStep === "entrada" ? "Definir PIN" : "Confirmar PIN"}
+              </h2>
+              <p style={{ fontSize: "13px", color: "var(--texto-secundario)", fontWeight: 600, marginTop: "4px" }}>
+                {pinSuccess
+                  ? "A criança já pode fazer login."
+                  : pinStep === "entrada"
+                  ? "Escolhe um PIN de 4 dígitos."
+                  : "Introduz o PIN novamente para confirmar."}
+              </p>
+            </div>
+
+            {!pinSuccess && (
+              <>
+                {/* PIN digits */}
+                <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginBottom: "20px" }}>
+                  {(pinStep === "entrada" ? pinDigits : pinConfirm).map((digit, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => {
+                        if (pinStep === "entrada") pinRefs.current[i] = el;
+                        else confirmRefs.current[i] = el;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => {
+                        if (pinStep === "entrada") {
+                          handlePinDigit(i, e.target.value, pinDigits, setPinDigits, pinRefs, handlePinEntradaComplete);
+                        } else {
+                          handlePinDigit(i, e.target.value, pinConfirm, setPinConfirm, confirmRefs, handlePinConfirmComplete);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (pinStep === "entrada") handlePinKeyDown(i, e, pinDigits, pinRefs);
+                        else handlePinKeyDown(i, e, pinConfirm, confirmRefs);
+                      }}
+                      className="pin-digit"
+                      disabled={pinLoading}
+                      style={{} as React.CSSProperties}
+                    />
+                  ))}
+                </div>
+
+                {pinError && (
+                  <div style={{ background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.4)", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", fontWeight: 600, color: "var(--amarelo-texto)", marginBottom: "16px", textAlign: "center" }}>
+                    {pinError}
+                  </div>
+                )}
+
+                {pinLoading && (
+                  <p style={{ textAlign: "center", fontSize: "13px", color: "var(--texto-secundario)", fontWeight: 600, marginBottom: "16px" }}>
+                    A guardar...
+                  </p>
+                )}
+
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    onClick={closePinModal}
+                    style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "1.5px solid rgba(160,144,128,0.3)", background: "transparent", fontSize: "14px", fontWeight: 700, fontFamily: "Nunito, sans-serif", color: "var(--texto-secundario)", cursor: "none" }}
+                  >
+                    Cancelar
+                  </button>
+                  {pinStep === "confirmacao" && (
+                    <button
+                      onClick={() => {
+                        setPinStep("entrada");
+                        setPinConfirm(["", "", "", ""]);
+                        setPinError("");
+                        setTimeout(() => pinRefs.current[0]?.focus(), 80);
+                      }}
+                      style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "1.5px solid rgba(160,144,128,0.3)", background: "transparent", fontSize: "14px", fontWeight: 700, fontFamily: "Nunito, sans-serif", color: "var(--texto-secundario)", cursor: "none" }}
+                    >
+                      ← Alterar
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+
+            {pinSuccess && (
+              <div style={{ textAlign: "center", fontSize: "40px" }}>🔐</div>
+            )}
+          </div>
+        </div>
+      )}
       {/* Top bar */}
       <div
         style={{
@@ -545,6 +764,25 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
                       <p style={{ fontSize: "11px", opacity: 0.5 }}>{c.escola ?? "—"}</p>
                     )}
                   </div>
+                  <button
+                    onClick={() => openPinModal(c.id, c.nome)}
+                    title="Definir PIN"
+                    style={{
+                      flexShrink: 0,
+                      background: "rgba(167,139,250,0.2)",
+                      border: "1px solid rgba(167,139,250,0.35)",
+                      borderRadius: "8px",
+                      padding: "4px 10px",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      fontFamily: "Nunito, sans-serif",
+                      color: "rgba(255,255,255,0.85)",
+                      cursor: "none",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    PIN
+                  </button>
                 </div>
               ))
             ) : (
