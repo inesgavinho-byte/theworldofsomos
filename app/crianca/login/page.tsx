@@ -350,7 +350,7 @@ export default function CriancaLoginPage() {
             }}
           >
             <Link href="/login" style={{ color: "var(--texto-secundario)" }}>
-              ← Entrar como pai / mãe
+              ← Área familiar
             </Link>
           </p>
         </div>

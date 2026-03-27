@@ -8,21 +8,29 @@ const DIAS_SEMANA = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 const HOJE_IDX = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
 
 const MISSAO = {
-  slug: "palavras-que-voam",
-  titulo: "As Palavras que Voam",
-  dimensao: "Artística",
-  cor: "#f472b6",
-  corCard: "#3d1a2e",
+  slug: "as-emocoes-sao-dados",
+  titulo: "As Emoções são Dados",
+  dimensao: "Identitária",
+  cor: "#a78bfa",
+  corCard: "#2a2250",
   progresso: 0,
   total: 5,
 };
 
-const EXERCICIOS_SESSAO = [
-  { slug: "palavras-que-voam", titulo: "As Palavras que Voam", dimensao: "Artística", cor: "#f472b6", feito: false },
-  { slug: "o-mapa-dos-numeros", titulo: "O Mapa dos Números", dimensao: "Lógica", cor: "#60a5fa", feito: false },
+// Lições universais — pertencem à condição humana, não ao currículo
+const LICOES_UNIVERSAIS = [
+  { slug: "as-emocoes-sao-dados",  titulo: "As Emoções são Dados",   dimensao: "Identitária", cor: "#a78bfa", feito: false },
+  { slug: "errar-e-parte-do-mapa", titulo: "Errar é Parte do Mapa",  dimensao: "Identitária", cor: "#a78bfa", feito: false },
+  { slug: "o-proposito",           titulo: "O Propósito",            dimensao: "Social",      cor: "#facc15", feito: false },
+];
+
+// Lições curriculares — filtradas pelo currículo da criança
+const LICOES_CURRICULARES = [
+  { slug: "palavras-que-voam",          titulo: "As Palavras que Voam",       dimensao: "Artística",   cor: "#f472b6", feito: false },
+  { slug: "o-mapa-dos-numeros",         titulo: "O Mapa dos Números",         dimensao: "Lógica",      cor: "#60a5fa", feito: false },
   { slug: "a-vida-secreta-das-plantas", titulo: "A Vida Secreta das Plantas", dimensao: "Naturalista", cor: "#4ade80", feito: false },
-  { slug: "a-aventura-em-ingles", titulo: "The Big Adventure", dimensao: "Artística", cor: "#f472b6", feito: false },
-  { slug: "os-descobrimentos", titulo: "Os Descobrimentos", dimensao: "Social", cor: "#f472b6", feito: false },
+  { slug: "a-aventura-em-ingles",       titulo: "The Big Adventure",          dimensao: "Artística",   cor: "#f472b6", feito: false },
+  { slug: "os-descobrimentos",          titulo: "Os Descobrimentos",          dimensao: "Social",      cor: "#facc15", feito: false },
 ];
 
 const TAREFAS = [
@@ -287,29 +295,44 @@ export default function CriancaDashboardClient({ profile, crianca }: Props) {
           </div>
         </Link>
 
-        {/* Exercícios da sessão */}
+        {/* Lições Universais — O teu mundo interior */}
         <div
           style={{
             background: "rgba(255,255,255,0.6)",
             borderRadius: "20px",
             padding: "18px",
             marginBottom: "20px",
-            border: "1px solid rgba(160,144,128,0.12)",
+            border: "1px solid rgba(167,139,250,0.18)",
           }}
         >
-          <p
-            style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "var(--texto-secundario)",
-              marginBottom: "12px",
-            }}
-          >
-            Sessão de hoje
-          </p>
-          {EXERCICIOS_SESSAO.map((ex, i) => (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--texto-secundario)",
+                flex: 1,
+              }}
+            >
+              O teu mundo interior
+            </p>
+            <span
+              style={{
+                padding: "2px 8px",
+                borderRadius: "999px",
+                background: "rgba(167,139,250,0.12)",
+                color: "#534ab7",
+                fontSize: "10px",
+                fontWeight: 800,
+                letterSpacing: "0.04em",
+              }}
+            >
+              Universal
+            </span>
+          </div>
+          {LICOES_UNIVERSAIS.map((ex, i) => (
             <Link key={ex.slug} href={`/licao/${ex.slug}/exercicios`}>
               <div
                 className="card-hover"
@@ -320,7 +343,94 @@ export default function CriancaDashboardClient({ profile, crianca }: Props) {
                   padding: "10px",
                   borderRadius: "12px",
                   background: ex.feito ? "rgba(74,222,128,0.06)" : "transparent",
-                  marginBottom: i < EXERCICIOS_SESSAO.length - 1 ? "6px" : 0,
+                  marginBottom: i < LICOES_UNIVERSAIS.length - 1 ? "6px" : 0,
+                }}
+              >
+                <div
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "10px",
+                    background: `${ex.cor}20`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {ex.feito ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 12L10 17L19 7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : (
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: ex.cor }} />
+                  )}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: "14px", fontWeight: 700 }}>{ex.titulo}</p>
+                  <p style={{ fontSize: "11px", color: "var(--texto-secundario)", fontWeight: 600 }}>
+                    {ex.dimensao}
+                  </p>
+                </div>
+                {!ex.feito && (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 18L15 12L9 6" stroke="var(--texto-secundario)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Lições Curriculares — As tuas matérias */}
+        <div
+          style={{
+            background: "rgba(255,255,255,0.6)",
+            borderRadius: "20px",
+            padding: "18px",
+            marginBottom: "20px",
+            border: "1px solid rgba(96,165,250,0.18)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--texto-secundario)",
+                flex: 1,
+              }}
+            >
+              As tuas matérias
+            </p>
+            <span
+              style={{
+                padding: "2px 8px",
+                borderRadius: "999px",
+                background: "rgba(96,165,250,0.12)",
+                color: "#185fa5",
+                fontSize: "10px",
+                fontWeight: 800,
+                letterSpacing: "0.04em",
+              }}
+            >
+              Curricular
+            </span>
+          </div>
+          {LICOES_CURRICULARES.map((ex, i) => (
+            <Link key={ex.slug} href={`/licao/${ex.slug}/exercicios`}>
+              <div
+                className="card-hover"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "10px",
+                  borderRadius: "12px",
+                  background: ex.feito ? "rgba(74,222,128,0.06)" : "transparent",
+                  marginBottom: i < LICOES_CURRICULARES.length - 1 ? "6px" : 0,
                 }}
               >
                 <div

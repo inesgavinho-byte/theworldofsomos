@@ -59,7 +59,7 @@ export default async function AdminPage() {
       ],
     },
     {
-      tipo: "Pai",
+      tipo: "Família",
       cor: "#60a5fa",
       corFundo: "rgba(96,165,250,0.1)",
       rotas: [
@@ -145,7 +145,7 @@ export default async function AdminPage() {
               cursor: "none",
             }}
           >
-            Ver dashboard pai
+            Vista familiar
           </button>
         </Link>
       </div>

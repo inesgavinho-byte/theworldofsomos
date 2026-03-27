@@ -27,12 +27,12 @@
   --azul-texto: #185fa5;
   --azul-card: #0f1a2e;
 
-  /* Dimensão: Criativa/Social (rosa) */
+  /* Dimensão: Artística (rosa) */
   --rosa-tint: #f472b6;
   --rosa-texto: #993556;
   --rosa-card: #3d1a2e;
 
-  /* Dimensão: Emocional/Propósito (amarelo) */
+  /* Dimensão: Social/Propósito (amarelo) */
   --amarelo-tint: #facc15;
   --amarelo-texto: #854f0b;
   --amarelo-card: #2a1f0a;
@@ -204,3 +204,97 @@ a {
 .animate-fade-in { animation: fadeIn 0.4s ease forwards; }
 .animate-slide-up { animation: slideUp 0.5s ease forwards; }
 .animate-pulse-soft { animation: pulseSoft 2s ease-in-out infinite; }
+
+/* Lesson cover: per-dimension animations */
+@keyframes letterFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes iconGlowPulse {
+  0%, 100% { filter: drop-shadow(0 0 6px currentColor); opacity: 0.9; }
+  50% { filter: drop-shadow(0 0 18px currentColor); opacity: 1; }
+}
+
+@keyframes iconBounceIn {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.18); opacity: 1; }
+  80%  { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+
+@keyframes iconScanReveal {
+  from { clip-path: inset(0 0 100% 0); opacity: 0.5; }
+  to   { clip-path: inset(0 0 0% 0);   opacity: 1; }
+}
+
+@keyframes iconSpinOnce {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes shimmerPass {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes coverFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cover-letter {
+  display: inline-block;
+  animation: letterFadeUp 0.4s ease both;
+}
+
+.cover-mantra {
+  animation: coverFadeIn 0.8s ease both;
+}
+
+.cover-icon-glow {
+  animation: iconGlowPulse 2.4s ease-in-out infinite;
+}
+
+.cover-icon-bounce {
+  animation: iconBounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.cover-icon-scan {
+  animation: iconScanReveal 0.5s ease both;
+}
+
+.cover-icon-spin {
+  animation: iconSpinOnce 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.cover-shimmer-title {
+  background: linear-gradient(90deg, #facc15 0%, #fff8c0 40%, #facc15 60%, #facc15 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmerPass 1.4s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cover-letter,
+  .cover-mantra,
+  .cover-icon-glow,
+  .cover-icon-bounce,
+  .cover-icon-scan,
+  .cover-icon-spin,
+  .cover-shimmer-title {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    -webkit-text-fill-color: unset !important;
+    color: inherit;
+  }
+}

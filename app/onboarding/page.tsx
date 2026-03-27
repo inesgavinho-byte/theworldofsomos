@@ -3,22 +3,36 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { CURRICULOS_CONFIG, type CodigoCurriculo, formatAnoEscolar } from "@/lib/curriculo";
 
-const CURRICULOS = ["PT", "Cambridge", "IB", "outro"];
-const PAISES = ["Portugal", "Brasil", "Angola", "Moçambique", "Reino Unido", "outro"];
+const CURRICULOS_LIST: CodigoCurriculo[] = ["PT", "BNCC", "Cambridge", "IB", "FR"];
+
+const PAPEIS = [
+  { valor: "mae", label: "Mãe" },
+  { valor: "pai", label: "Pai" },
+  { valor: "avo", label: "Avó / Avô" },
+  { valor: "irmao", label: "Irmão / Irmã" },
+  { valor: "outro", label: "Outro familiar" },
+] as const;
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [nome, setNome] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
-  const [escola, setEscola] = useState("");
-  const [curriculo, setCurriculo] = useState("PT");
-  const [pais, setPais] = useState("Portugal");
+  const [papel, setPapel] = useState("");
+  const [curriculo, setCurriculo] = useState<CodigoCurriculo>("PT");
+  const [anoEscolar, setAnoEscolar] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const totalSteps = 3;
+  const totalSteps = 4;
+  const curriculoConfig = CURRICULOS_CONFIG[curriculo];
+
+  const handleCurriculoChange = (c: CodigoCurriculo) => {
+    setCurriculo(c);
+    setAnoEscolar(""); // reset when curriculum changes
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -33,25 +47,51 @@ export default function OnboardingPage() {
     }
 
     // Get user's family
-    const { data: membro } = await supabase
+    let { data: membro } = await supabase
       .from("familia_membros")
       .select("familia_id")
       .eq("profile_id", user.id)
       .single();
 
+    // If no family found, auto-create one
     if (!membro?.familia_id) {
-      setError("Erro ao encontrar a tua família. Tenta outra vez.");
-      setLoading(false);
-      return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("nome")
+        .eq("id", user.id)
+        .single();
+
+      const nomeFamilia = profile?.nome
+        ? `Família ${profile.nome.split(" ")[0]}`
+        : "A minha família";
+
+      const { data: novaFamilia, error: familiaError } = await supabase
+        .from("familias")
+        .insert({ nome: nomeFamilia, plano: "free" })
+        .select()
+        .single();
+
+      if (familiaError || !novaFamilia) {
+        setError("Erro ao criar a tua família. Tenta outra vez.");
+        setLoading(false);
+        return;
+      }
+
+      await supabase.from("familia_membros").insert({
+        familia_id: novaFamilia.id,
+        profile_id: user.id,
+        papel: papel || "outro",
+      });
+
+      membro = { familia_id: novaFamilia.id };
     }
 
     const { error: insertError } = await supabase.from("criancas").insert({
       familia_id: membro.familia_id,
       nome,
       data_nascimento: dataNascimento || null,
-      escola,
       curriculo,
-      pais,
+      ano_escolar: anoEscolar,
     });
 
     if (insertError) {
@@ -86,6 +126,10 @@ export default function OnboardingPage() {
     textTransform: "uppercase",
   };
 
+  const canProceedStep1 = nome.trim().length > 0;
+  const canProceedStep2 = papel.length > 0;
+  const canProceedStep3 = anoEscolar.length > 0;
+
   return (
     <div
       style={{
@@ -105,7 +149,7 @@ export default function OnboardingPage() {
             SOMOS
           </h1>
           <p style={{ fontSize: "14px", color: "var(--texto-secundario)", marginTop: "4px", fontWeight: 600 }}>
-            Vamos criar o perfil do teu filho
+            {nome ? `Vamos criar o perfil de ${nome}` : "Vamos criar um novo perfil"}
           </p>
         </div>
 
@@ -134,13 +178,14 @@ export default function OnboardingPage() {
             border: "1px solid rgba(160,144,128,0.2)",
           }}
         >
+          {/* ── Passo 1: Nome + data de nascimento ── */}
           {step === 1 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <h2 className="font-editorial" style={{ fontSize: "24px", fontWeight: 500 }}>
                 Como se chama?
               </h2>
               <div>
-                <label style={labelStyle}>Nome do filho</label>
+                <label style={labelStyle}>Nome da criança</label>
                 <input
                   type="text"
                   value={nome}
@@ -162,80 +207,179 @@ export default function OnboardingPage() {
             </div>
           )}
 
+          {/* ── Passo 2: Relação com a criança ── */}
           {step === 2 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <h2 className="font-editorial" style={{ fontSize: "24px", fontWeight: 500 }}>
-                Onde estuda?
+                Qual é a tua relação com {nome || "a criança"}?
               </h2>
-              <div>
-                <label style={labelStyle}>Nome da escola</label>
-                <input
-                  type="text"
-                  value={escola}
-                  onChange={(e) => setEscola(e.target.value)}
-                  placeholder="Escola Básica..."
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>Currículo</label>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                  {CURRICULOS.map((c) => (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {PAPEIS.map((p) => {
+                  const isSelected = papel === p.valor;
+                  return (
                     <button
-                      key={c}
-                      onClick={() => setCurriculo(c)}
+                      key={p.valor}
+                      onClick={() => setPapel(p.valor)}
                       style={{
-                        padding: "10px",
-                        borderRadius: "10px",
-                        border: curriculo === c
+                        padding: "12px 14px",
+                        borderRadius: "12px",
+                        border: isSelected
                           ? "1.5px solid var(--roxo-tint)"
                           : "1.5px solid rgba(160,144,128,0.25)",
-                        background: curriculo === c ? "rgba(167,139,250,0.1)" : "white",
+                        background: isSelected ? "rgba(167,139,250,0.1)" : "white",
                         fontFamily: "Nunito, sans-serif",
                         fontWeight: 700,
-                        fontSize: "13px",
+                        fontSize: "14px",
                         cursor: "none",
-                        color: curriculo === c ? "var(--roxo-texto)" : "var(--texto-principal)",
+                        color: isSelected ? "var(--roxo-texto)" : "var(--texto-principal)",
+                        textAlign: "left",
                       }}
                     >
-                      {c}
+                      {p.label}
                     </button>
-                  ))}
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Passo 3: Sistema de ensino + ano escolar ── */}
+          {step === 3 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <h2 className="font-editorial" style={{ fontSize: "24px", fontWeight: 500 }}>
+                Sistema de ensino
+              </h2>
+
+              <div>
+                <label style={labelStyle}>Currículo</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {CURRICULOS_LIST.map((c) => {
+                    const cfg = CURRICULOS_CONFIG[c];
+                    const isSelected = curriculo === c;
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => handleCurriculoChange(c)}
+                        style={{
+                          padding: "12px 14px",
+                          borderRadius: "12px",
+                          border: isSelected
+                            ? "1.5px solid var(--roxo-tint)"
+                            : "1.5px solid rgba(160,144,128,0.25)",
+                          background: isSelected ? "rgba(167,139,250,0.1)" : "white",
+                          fontFamily: "Nunito, sans-serif",
+                          fontWeight: 700,
+                          fontSize: "13px",
+                          cursor: "none",
+                          color: isSelected ? "var(--roxo-texto)" : "var(--texto-principal)",
+                          textAlign: "left",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                        }}
+                      >
+                        <span style={{ fontSize: "18px" }}>{cfg.bandeira}</span>
+                        <div>
+                          <div>{cfg.nome}</div>
+                          <div style={{ fontSize: "11px", fontWeight: 600, opacity: 0.6, marginTop: "1px" }}>
+                            {cfg.idioma}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Ano escolar</label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                  {curriculoConfig.anos_display.map((display, idx) => {
+                    const valor = curriculoConfig.anos_escolares[idx];
+                    const isSelected = anoEscolar === valor;
+                    return (
+                      <button
+                        key={valor}
+                        onClick={() => setAnoEscolar(valor)}
+                        style={{
+                          padding: "9px 6px",
+                          borderRadius: "10px",
+                          border: isSelected
+                            ? "1.5px solid var(--roxo-tint)"
+                            : "1.5px solid rgba(160,144,128,0.25)",
+                          background: isSelected ? "rgba(167,139,250,0.1)" : "white",
+                          fontFamily: "Nunito, sans-serif",
+                          fontWeight: 700,
+                          fontSize: "12px",
+                          cursor: "none",
+                          color: isSelected ? "var(--roxo-texto)" : "var(--texto-principal)",
+                        }}
+                      >
+                        {display}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           )}
 
-          {step === 3 && (
+          {/* ── Passo 4: Confirmação ── */}
+          {step === 4 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <h2 className="font-editorial" style={{ fontSize: "24px", fontWeight: 500 }}>
-                Onde vivem?
+                Tudo certo!
               </h2>
-              <div>
-                <label style={labelStyle}>País</label>
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  {PAISES.map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setPais(p)}
-                      style={{
-                        padding: "10px 14px",
-                        borderRadius: "10px",
-                        border: pais === p
-                          ? "1.5px solid var(--roxo-tint)"
-                          : "1.5px solid rgba(160,144,128,0.2)",
-                        background: pais === p ? "rgba(167,139,250,0.1)" : "white",
-                        fontFamily: "Nunito, sans-serif",
-                        fontWeight: 700,
-                        fontSize: "13px",
-                        cursor: "none",
-                        color: pais === p ? "var(--roxo-texto)" : "var(--texto-principal)",
-                        textAlign: "left",
-                      }}
-                    >
-                      {p}
-                    </button>
-                  ))}
+              <p style={{ fontSize: "14px", color: "var(--texto-secundario)", fontWeight: 600 }}>
+                Confirma os dados antes de criar o perfil.
+              </p>
+
+              <div
+                style={{
+                  background: "white",
+                  borderRadius: "14px",
+                  padding: "18px",
+                  border: "1px solid rgba(160,144,128,0.15)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "14px",
+                }}
+              >
+                <div>
+                  <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--texto-secundario)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "3px" }}>
+                    Nome
+                  </p>
+                  <p style={{ fontSize: "15px", fontWeight: 700 }}>{nome}</p>
+                </div>
+
+                {dataNascimento && (
+                  <div>
+                    <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--texto-secundario)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "3px" }}>
+                      Data de nascimento
+                    </p>
+                    <p style={{ fontSize: "15px", fontWeight: 700 }}>
+                      {new Date(dataNascimento + "T00:00:00").toLocaleDateString("pt-PT")}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--texto-secundario)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "3px" }}>
+                    Currículo
+                  </p>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "16px" }}>{curriculoConfig.bandeira}</span>
+                    <p style={{ fontSize: "15px", fontWeight: 700 }}>{curriculoConfig.nome}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--texto-secundario)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "3px" }}>
+                    Ano escolar
+                  </p>
+                  <p style={{ fontSize: "15px", fontWeight: 700 }}>
+                    {formatAnoEscolar(curriculo, anoEscolar)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -281,8 +425,13 @@ export default function OnboardingPage() {
             )}
             {step < totalSteps ? (
               <button
-                onClick={() => step === 1 && !nome.trim() ? null : setStep((s) => s + 1)}
-                disabled={step === 1 && !nome.trim()}
+                onClick={() => {
+                  if (step === 1 && !canProceedStep1) return;
+                  if (step === 2 && !canProceedStep2) return;
+                  if (step === 3 && !canProceedStep3) return;
+                  setStep((s) => s + 1);
+                }}
+                disabled={(step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2) || (step === 3 && !canProceedStep3)}
                 style={{
                   flex: 2,
                   background: "var(--texto-principal)",
@@ -294,7 +443,7 @@ export default function OnboardingPage() {
                   fontWeight: 800,
                   fontFamily: "Nunito, sans-serif",
                   cursor: "none",
-                  opacity: step === 1 && !nome.trim() ? 0.4 : 1,
+                  opacity: (step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2) || (step === 3 && !canProceedStep3) ? 0.4 : 1,
                 }}
               >
                 Continuar

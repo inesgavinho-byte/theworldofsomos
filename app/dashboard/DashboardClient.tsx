@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { getCurriculoConfig, formatAnoEscolar } from "@/lib/curriculo";
 
 const LICOES = [
   {
@@ -49,7 +50,7 @@ const LICOES = [
     slug: "o-proposito",
     titulo: "O Propósito",
     subtitulo: "Para que estou aqui?",
-    dimensao: "Emocional",
+    dimensao: "Social",
     cor: "#facc15",
     corTexto: "#854f0b",
     corCard: "#2a1f0a",
@@ -422,6 +423,59 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
 
         {/* RIGHT SIDEBAR */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* Gerar exercícios do livro */}
+          <Link href="/gerar">
+            <div
+              className="card-hover"
+              style={{
+                background: "rgba(96,165,250,0.1)",
+                border: "1.5px solid rgba(96,165,250,0.25)",
+                borderRadius: "16px",
+                padding: "16px 18px",
+                cursor: "none",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "12px",
+                    background: "rgba(96,165,250,0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "20px",
+                    flexShrink: 0,
+                  }}
+                >
+                  📷
+                </div>
+                <div>
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 800,
+                      color: "#185fa5",
+                      marginBottom: "2px",
+                    }}
+                  >
+                    Gerar exercícios do livro
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "var(--texto-secundario)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Tira uma foto a qualquer página
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Link>
+
           {/* A vossa família */}
           <div
             style={{
@@ -468,13 +522,28 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
                       justifyContent: "center",
                       fontSize: "14px",
                       fontWeight: 800,
+                      flexShrink: 0,
                     }}
                   >
                     {c.nome?.charAt(0) ?? "?"}
                   </div>
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: "14px", fontWeight: 700 }}>{c.nome}</p>
-                    <p style={{ fontSize: "11px", opacity: 0.5 }}>{c.escola ?? "—"}</p>
+                    {c.curriculo && c.curriculo !== "outro" ? (
+                      <p style={{ fontSize: "11px", opacity: 0.6, fontWeight: 600 }}>
+                        {(() => {
+                          const cfg = getCurriculoConfig(c.curriculo);
+                          const anoDisplay = c.ano_escolar
+                            ? formatAnoEscolar(c.curriculo, c.ano_escolar)
+                            : null;
+                          return cfg
+                            ? `${cfg.bandeira} ${c.curriculo}${anoDisplay ? ` · ${anoDisplay}` : ""}`
+                            : c.curriculo;
+                        })()}
+                      </p>
+                    ) : (
+                      <p style={{ fontSize: "11px", opacity: 0.5 }}>{c.escola ?? "—"}</p>
+                    )}
                   </div>
                 </div>
               ))
@@ -490,7 +559,7 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
                   }}
                 >
                   <p style={{ fontSize: "13px", fontWeight: 700, opacity: 0.7 }}>
-                    + Adicionar filho
+                    + Adicionar criança
                   </p>
                 </div>
               </Link>
