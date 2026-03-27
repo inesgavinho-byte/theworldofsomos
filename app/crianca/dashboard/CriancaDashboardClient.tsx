@@ -29,6 +29,8 @@ const LICOES_CURRICULARES = [
   { slug: "palavras-que-voam",          titulo: "As Palavras que Voam",       dimensao: "Artística",   cor: "#f472b6", feito: false },
   { slug: "o-mapa-dos-numeros",         titulo: "O Mapa dos Números",         dimensao: "Lógica",      cor: "#60a5fa", feito: false },
   { slug: "a-vida-secreta-das-plantas", titulo: "A Vida Secreta das Plantas", dimensao: "Naturalista", cor: "#4ade80", feito: false },
+  { slug: "a-aventura-em-ingles",       titulo: "The Big Adventure",          dimensao: "Artística",   cor: "#f472b6", feito: false },
+  { slug: "os-descobrimentos",          titulo: "Os Descobrimentos",          dimensao: "Social",      cor: "#facc15", feito: false },
 ];
 
 const TAREFAS = [

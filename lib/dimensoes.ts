@@ -55,6 +55,7 @@ export const SLUG_DIMENSAO: Record<string, Dimensao> = {
   "cerebro-desafios": "identitaria",
   "o-proposito": "social",
   "como-aprender": "logica",
+  // Lições curriculares — 3.º/4.º ano PT
   "palavras-que-voam": "artistica",
   "o-mapa-dos-numeros": "logica",
   "a-vida-secreta-das-plantas": "naturalista",
