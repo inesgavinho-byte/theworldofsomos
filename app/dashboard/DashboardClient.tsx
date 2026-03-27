@@ -695,6 +695,59 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
             </div>
           </Link>
 
+          {/* The Mail Box */}
+          <Link href="/mailbox">
+            <div
+              className="card-hover"
+              style={{
+                background: "rgba(26,23,20,0.85)",
+                border: "1.5px solid rgba(167,139,250,0.22)",
+                borderRadius: "16px",
+                padding: "16px 18px",
+                cursor: "none",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "12px",
+                    background: "rgba(167,139,250,0.12)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "20px",
+                    flexShrink: 0,
+                  }}
+                >
+                  ✉️
+                </div>
+                <div>
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 800,
+                      color: "#a78bfa",
+                      marginBottom: "2px",
+                    }}
+                  >
+                    The Mail Box
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "rgba(167,139,250,0.5)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Deposita o que carregas
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Link>
+
           {/* A vossa família */}
           <div
             style={{
