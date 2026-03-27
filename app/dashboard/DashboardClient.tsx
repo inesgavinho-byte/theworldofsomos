@@ -137,9 +137,10 @@ interface Props {
   profile: { nome: string; tipo: string } | null;
   familiaId: string | null;
   criancas: any[];
+  ultimosMomentos?: Record<string, { titulo_licao: string; momento_adulto: string; created_at: string }>;
 }
 
-export default function DashboardClient({ profile, familiaId, criancas }: Props) {
+export default function DashboardClient({ profile, familiaId, criancas, ultimosMomentos = {} }: Props) {
   const router = useRouter();
   const licaoHoje = LICOES[0];
   const outrasLicoes = LICOES.slice(1, 5);
@@ -721,15 +722,20 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
                 <div
                   key={c.id}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    padding: "8px",
                     borderRadius: "12px",
                     background: "rgba(255,255,255,0.07)",
                     marginBottom: "8px",
+                    overflow: "hidden",
                   }}
                 >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      padding: "8px",
+                    }}
+                  >
                   <div
                     style={{
                       width: "32px",
@@ -783,6 +789,43 @@ export default function DashboardClient({ profile, familiaId, criancas }: Props)
                   >
                     PIN
                   </button>
+                  </div>
+                  {ultimosMomentos[c.id] && (
+                  <div
+                    style={{
+                      marginTop: "8px",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      background: "rgba(255,255,255,0.07)",
+                      borderTop: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        opacity: 0.4,
+                        marginBottom: "5px",
+                      }}
+                    >
+                      {ultimosMomentos[c.id].titulo_licao} — O Momento de hoje
+                    </p>
+                    <p
+                      className="font-editorial"
+                      style={{
+                        fontSize: "13px",
+                        fontStyle: "italic",
+                        fontWeight: 400,
+                        lineHeight: 1.5,
+                        opacity: 0.85,
+                      }}
+                    >
+                      "{ultimosMomentos[c.id].momento_adulto}"
+                    </p>
+                  </div>
+                )}
                 </div>
               ))
             ) : (

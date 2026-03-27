@@ -34,11 +34,28 @@ export default async function DashboardPage() {
     criancas = data ?? [];
   }
 
+  // Fetch last session with momento for each child
+  const ultimosMomentos: Record<string, any> = {};
+  for (const crianca of criancas) {
+    const { data: sessao } = await supabase
+      .from("sessoes")
+      .select("titulo_licao, momento_adulto, created_at")
+      .eq("crianca_id", crianca.id)
+      .not("momento_adulto", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+    if (sessao) {
+      ultimosMomentos[crianca.id] = sessao;
+    }
+  }
+
   return (
     <DashboardClient
       profile={profile}
       familiaId={familiaId}
       criancas={criancas}
+      ultimosMomentos={ultimosMomentos}
     />
   );
 }
