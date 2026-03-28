@@ -11,7 +11,7 @@ const PUBLIC_ROUTES = [
   "/crianca/login",
 ];
 
-const PUBLIC_PREFIXES = ["/leituras"];
+const PUBLIC_PREFIXES = ["/leituras", "/guilda"];
 
 function isPublicRoute(pathname: string): boolean {
   if (PUBLIC_ROUTES.includes(pathname)) return true;
