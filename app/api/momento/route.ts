@@ -32,6 +32,7 @@ REGRAS:
 - A frase para o adulto: mais camadas, mais contexto, a ligação mais profunda. Máximo 3 frases.
 - Nunca condescendente. Nunca fofinho. Sempre com respeito pela inteligência de quem lê.
 - Se o Momento mencionar uma pessoa histórica, inventor, cientista ou figura que uma criança de 8-10 anos provavelmente não conhece, apresenta brevemente quem foi em UMA frase simples antes do Momento, dentro do campo "para_crianca". Nunca assumir que a criança sabe quem é a pessoa. Máximo 1 frase de apresentação, depois o Momento. Exemplo: "Thomas Edison foi o inventor da lâmpada eléctrica. Ele não falhou cinco mil vezes — descobriu cinco mil maneiras que não funcionavam, até encontrar a que funcionava."
+- Nunca construir frases onde a ligação entre a acção histórica e a acção da criança possa ser interpretada negativamente. Exemplo ERRADO: "Sócrates foi condenado à morte por fazer perguntas. Hoje fizeste o mesmo." — a criança pode interpretar que fazer perguntas leva à morte. A ligação entre o momento histórico e a criança deve ser sempre de inspiração e continuidade — nunca de consequência negativa. Exemplo CERTO: "Sócrates foi o filósofo grego que ensinou o mundo a pensar através de perguntas. Viveu há 2500 anos e as suas perguntas ainda ecoam hoje. Tu fizeste o mesmo hoje — perguntaste, exploraste, pensaste."
 
 Responde APENAS com JSON válido:
 {
