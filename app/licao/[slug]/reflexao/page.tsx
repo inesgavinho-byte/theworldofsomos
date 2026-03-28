@@ -97,6 +97,11 @@ function ReflexaoContent({ slug }: { slug: string }) {
         const json = await res.json();
         if (json.sucesso && json.momento) {
           setMomento(json.momento);
+          try {
+            sessionStorage.setItem(`momento_${slug}`, JSON.stringify(json.momento));
+          } catch {
+            // sessionStorage not available — the momento page will handle gracefully
+          }
         }
       } catch {
         // Silently fail — the block simply won't render
@@ -139,7 +144,7 @@ function ReflexaoContent({ slug }: { slug: string }) {
     }
 
     setTimeout(() => {
-      router.push("/crianca/dashboard");
+      router.push(`/licao/${slug}/momento`);
     }, 600);
   };
 
@@ -564,12 +569,7 @@ function ReflexaoContent({ slug }: { slug: string }) {
             transition: "opacity 0.2s",
           }}
         >
-          {guardado ? "A guardar..." : "Voltar ao meu mundo"}
-          {!guardado && (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M5 12H19M13 6L19 12L13 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          )}
+          {guardado ? "A guardar..." : "Ver o teu Momento →"}
         </button>
       </div>
 

@@ -31,6 +31,7 @@ REGRAS:
 - A frase para a criança: simples, directa, que a faça sentir ligada à história. Máximo 2 frases.
 - A frase para o adulto: mais camadas, mais contexto, a ligação mais profunda. Máximo 3 frases.
 - Nunca condescendente. Nunca fofinho. Sempre com respeito pela inteligência de quem lê.
+- Se o Momento mencionar uma pessoa histórica, inventor, cientista ou figura que uma criança de 8-10 anos provavelmente não conhece, apresenta brevemente quem foi em UMA frase simples antes do Momento, dentro do campo "para_crianca". Nunca assumir que a criança sabe quem é a pessoa. Máximo 1 frase de apresentação, depois o Momento. Exemplo: "Thomas Edison foi o inventor da lâmpada eléctrica. Ele não falhou cinco mil vezes — descobriu cinco mil maneiras que não funcionavam, até encontrar a que funcionava."
 
 Responde APENAS com JSON válido:
 {
