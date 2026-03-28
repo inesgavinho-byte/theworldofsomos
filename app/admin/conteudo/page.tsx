@@ -22,33 +22,16 @@ import type { CodigoCurriculo } from "@/lib/curriculo";
 
 type TipoConteudo = "universal" | "curricular";
 
-const LICOES: {
+interface Licao {
   slug: string;
   titulo: string;
+  subtitulo: string | null;
   dimensao: string;
   cor: string;
   curriculo: CodigoCurriculo | null;
   tipo: TipoConteudo;
-}[] = [
-  // Lições universais — pertencem à condição humana
-  { slug: "cerebro-incrivel",          titulo: "O Cérebro Incrível",         dimensao: "Identitária", cor: "#a78bfa", curriculo: null, tipo: "universal" },
-  { slug: "a-zona-certa",              titulo: "A Zona Certa",               dimensao: "Identitária", cor: "#a78bfa", curriculo: null, tipo: "universal" },
-  { slug: "cerebro-desafios",          titulo: "Cérebro e Desafios",         dimensao: "Identitária", cor: "#a78bfa", curriculo: null, tipo: "universal" },
-  { slug: "as-emocoes-sao-dados",      titulo: "As Emoções são Dados",       dimensao: "Identitária", cor: "#a78bfa", curriculo: null, tipo: "universal" },
-  { slug: "errar-e-parte-do-mapa",     titulo: "Errar é Parte do Mapa",      dimensao: "Identitária", cor: "#a78bfa", curriculo: null, tipo: "universal" },
-  { slug: "o-proposito",               titulo: "O Propósito",                dimensao: "Social",      cor: "#facc15", curriculo: null, tipo: "universal" },
-  { slug: "como-aprender",             titulo: "Como Aprender",              dimensao: "Lógica",      cor: "#60a5fa", curriculo: null, tipo: "universal" },
-  { slug: "sistema-solar",             titulo: "O Sistema Solar",            dimensao: "Lógica",      cor: "#60a5fa", curriculo: null, tipo: "universal" },
-  { slug: "floresta-tropical",         titulo: "A Floresta Tropical",        dimensao: "Naturalista", cor: "#4ade80", curriculo: null, tipo: "universal" },
-  { slug: "o-planeta-e-a-nossa-casa",  titulo: "O Planeta é a Nossa Casa",   dimensao: "Naturalista", cor: "#4ade80", curriculo: null, tipo: "universal" },
-  // Lições curriculares PT
-  { slug: "palavras-que-voam",          titulo: "As Palavras que Voam",        dimensao: "Artística",   cor: "#f472b6", curriculo: "PT", tipo: "curricular" },
-  { slug: "o-mapa-dos-numeros",         titulo: "O Mapa dos Números",          dimensao: "Lógica",      cor: "#60a5fa", curriculo: "PT", tipo: "curricular" },
-  { slug: "a-vida-secreta-das-plantas", titulo: "A Vida Secreta das Plantas",  dimensao: "Naturalista", cor: "#4ade80", curriculo: "PT", tipo: "curricular" },
-  { slug: "os-descobrimentos",          titulo: "Os Descobrimentos",           dimensao: "Social",      cor: "#facc15", curriculo: "PT", tipo: "curricular" },
-  // Lições curriculares Cambridge/EN
-  { slug: "a-aventura-em-ingles",       titulo: "The Big Adventure",           dimensao: "Artística",   cor: "#f472b6", curriculo: "Cambridge", tipo: "curricular" },
-];
+  ordem: number;
+}
 
 const CURRICULO_CORES: Record<string, { bg: string; texto: string }> = {
   PT:        { bg: "rgba(96,165,250,0.12)",  texto: "#185fa5" },
@@ -70,6 +53,8 @@ export default function AdminConteudoPage() {
   const router = useRouter();
   const [filtro, setFiltro] = useState<FiltroTab>("Todos");
   const [authChecked, setAuthChecked] = useState(false);
+  const [licoes, setLicoes] = useState<Licao[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const supabase = createClient();
@@ -78,6 +63,18 @@ export default function AdminConteudoPage() {
       supabase.from("profiles").select("tipo").eq("id", user.id).single().then(({ data: profile }) => {
         if (profile?.tipo !== "admin") { router.push("/dashboard"); return; }
         setAuthChecked(true);
+        // Fetch lessons from database
+        supabase
+          .from("licoes")
+          .select("slug, titulo, subtitulo, dimensao, cor, curriculo, tipo, ordem")
+          .eq("ativo", true)
+          .order("ordem", { ascending: true })
+          .then(({ data, error }) => {
+            if (!error && data) {
+              setLicoes(data as Licao[]);
+            }
+            setLoading(false);
+          });
       });
     });
   }, [router]);
@@ -85,10 +82,10 @@ export default function AdminConteudoPage() {
   if (!authChecked) return null;
 
   const licoesFiltradas = filtro === "Todos"
-    ? LICOES
+    ? licoes
     : filtro === "Universal"
-    ? LICOES.filter((l) => l.tipo === "universal")
-    : LICOES.filter((l) => l.curriculo === filtro);
+    ? licoes.filter((l) => l.tipo === "universal")
+    : licoes.filter((l) => l.curriculo === filtro);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--fundo-pai)", position: "relative", zIndex: 1, padding: "32px 24px" }}>
@@ -135,60 +132,76 @@ export default function AdminConteudoPage() {
           })}
         </div>
 
-        <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--texto-secundario)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "16px" }}>
-          Lições ({licoesFiltradas.length})
-        </p>
+        {loading ? (
+          <p style={{ fontSize: "13px", color: "var(--texto-secundario)", fontWeight: 600 }}>
+            A carregar lições...
+          </p>
+        ) : (
+          <>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--texto-secundario)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "16px" }}>
+              Lições ({licoesFiltradas.length})
+            </p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {licoesFiltradas.map((licao) => {
-            const tipoCores = TIPO_CORES[licao.tipo];
-            const curriculoCores = licao.curriculo ? CURRICULO_CORES[licao.curriculo] : null;
-            return (
-              <Link key={licao.slug} href={`/licao/${licao.slug}`}>
-                <div className="card-hover" style={{ background: "rgba(245,242,236,0.9)", borderRadius: "14px", padding: "16px 20px", border: "1px solid rgba(160,144,128,0.15)", display: "flex", alignItems: "center", gap: "14px" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: licao.cor, flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: "14px", fontWeight: 700 }}>{licao.titulo}</p>
-                    <p style={{ fontSize: "12px", color: "var(--texto-secundario)", fontWeight: 600 }}>{licao.dimensao}</p>
-                  </div>
-                  {/* Badge tipo */}
-                  <span
-                    style={{
-                      padding: "3px 10px",
-                      borderRadius: "999px",
-                      background: tipoCores.bg,
-                      color: tipoCores.texto,
-                      fontSize: "11px",
-                      fontWeight: 800,
-                      letterSpacing: "0.04em",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {licao.tipo === "universal" ? "Universal" : "Curricular"}
-                  </span>
-                  {/* Badge currículo (só se curricular) */}
-                  {curriculoCores && (
-                    <span
-                      style={{
-                        padding: "3px 10px",
-                        borderRadius: "999px",
-                        background: curriculoCores.bg,
-                        color: curriculoCores.texto,
-                        fontSize: "11px",
-                        fontWeight: 800,
-                        letterSpacing: "0.04em",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {licao.curriculo}
-                    </span>
-                  )}
-                  <span style={{ fontSize: "12px", color: "var(--roxo-texto)", fontWeight: 700 }}>Ver →</span>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {licoesFiltradas.map((licao) => {
+                const tipoCores = TIPO_CORES[licao.tipo];
+                const curriculoCores = licao.curriculo ? CURRICULO_CORES[licao.curriculo] : null;
+                return (
+                  <Link key={licao.slug} href={`/licao/${licao.slug}`}>
+                    <div className="card-hover" style={{ background: "rgba(245,242,236,0.9)", borderRadius: "14px", padding: "16px 20px", border: "1px solid rgba(160,144,128,0.15)", display: "flex", alignItems: "center", gap: "14px" }}>
+                      <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: licao.cor, flexShrink: 0 }} />
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: "14px", fontWeight: 700 }}>{licao.titulo}</p>
+                        <p style={{ fontSize: "12px", color: "var(--texto-secundario)", fontWeight: 600 }}>
+                          {licao.dimensao}{licao.subtitulo ? ` · ${licao.subtitulo}` : ""}
+                        </p>
+                      </div>
+                      {/* Badge tipo */}
+                      <span
+                        style={{
+                          padding: "3px 10px",
+                          borderRadius: "999px",
+                          background: tipoCores.bg,
+                          color: tipoCores.texto,
+                          fontSize: "11px",
+                          fontWeight: 800,
+                          letterSpacing: "0.04em",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {licao.tipo === "universal" ? "Universal" : "Curricular"}
+                      </span>
+                      {/* Badge currículo (só se curricular) */}
+                      {curriculoCores && (
+                        <span
+                          style={{
+                            padding: "3px 10px",
+                            borderRadius: "999px",
+                            background: curriculoCores.bg,
+                            color: curriculoCores.texto,
+                            fontSize: "11px",
+                            fontWeight: 800,
+                            letterSpacing: "0.04em",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {licao.curriculo}
+                        </span>
+                      )}
+                      <span style={{ fontSize: "12px", color: "var(--roxo-texto)", fontWeight: 700 }}>Ver →</span>
+                    </div>
+                  </Link>
+                );
+              })}
+
+              {licoesFiltradas.length === 0 && (
+                <p style={{ fontSize: "13px", color: "var(--texto-secundario)", fontWeight: 600, padding: "20px 0" }}>
+                  Nenhuma lição encontrada para este filtro.
+                </p>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
