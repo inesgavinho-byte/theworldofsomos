@@ -7,7 +7,7 @@ import { getDimensaoBySlug, SLUG_DIMENSAO } from "@/lib/dimensoes";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type DimKey = "identitaria" | "naturalista" | "logica" | "social" | "emocional";
+type DimKey = "identitaria" | "naturalista" | "logica" | "artistica" | "social";
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
@@ -110,8 +110,8 @@ const DIM_BG: Record<DimKey, string> = {
   identitaria: "#0d0b1a",
   naturalista: "#0f1a14",
   logica: "#0a0f1a",
-  social: "#1a0a12",
-  emocional: "#1a1200",
+  artistica: "#1a0a12",
+  social: "#1a1200",
 };
 
 const MANTRAS: Record<DimKey, string[]> = {
@@ -131,12 +131,12 @@ const MANTRAS: Record<DimKey, string[]> = {
     "Cada problema tem uma solução à tua espera.",
     "Pensar é um superpoder.",
   ],
-  social: [
+  artistica: [
     "As tuas palavras têm poder.",
     "Expressar é uma forma de voar.",
     "A língua é a casa do pensamento.",
   ],
-  emocional: [
+  social: [
     "Cada pessoa é um mundo por descobrir.",
     "Juntos somos mais do que a soma das partes.",
     "A história é feita de pessoas como tu.",
@@ -147,8 +147,8 @@ const BTN_TEXT_COLOR: Record<DimKey, string> = {
   identitaria: "#1a1530",
   naturalista: "#1e3d28",
   logica: "#0f1a2e",
-  social: "#3d1a2e",
-  emocional: "#2a1f0a",
+  artistica: "#3d1a2e",
+  social: "#2a1f0a",
 };
 
 // ─── Dimension icon (JSX) ─────────────────────────────────────────────────────
@@ -176,19 +176,21 @@ function DimIcon({ dimKey, color, size = 80 }: { dimKey: DimKey; color: string; 
       <path d="M23 18V14M19 23H14" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   );
-  if (dimKey === "social") return (
+  if (dimKey === "artistica") return (
+    <svg width={s} height={s} viewBox="0 0 32 32" fill="none">
+      <path d="M8 24L14 10L20 24" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M10 20H18" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="24" cy="10" r="3" stroke={color} strokeWidth="1.5"/>
+    </svg>
+  );
+  // social
+  return (
     <svg width={s} height={s} viewBox="0 0 32 32" fill="none">
       <circle cx="10" cy="12" r="4" stroke={color} strokeWidth="1.5"/>
       <circle cx="22" cy="12" r="4" stroke={color} strokeWidth="1.5"/>
       <path d="M4 26C4 22.13 6.69 19 10 19" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
       <path d="M28 26C28 22.13 25.31 19 22 19" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
       <path d="M14 26C14 22.13 16 19 16 19" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  );
-  // emocional
-  return (
-    <svg width={s} height={s} viewBox="0 0 32 32" fill="none">
-      <path d="M16 27L5.5 16.5C3.5 14.5 3.5 11.5 5.5 9.5C7.5 7.5 10.5 7.5 12.5 9.5L16 13L19.5 9.5C21.5 7.5 24.5 7.5 26.5 9.5C28.5 11.5 28.5 14.5 26.5 16.5L16 27Z" stroke={color} strokeWidth="1.5" strokeLinejoin="round"/>
     </svg>
   );
 }
@@ -235,8 +237,8 @@ function ParticleCanvas({ dimKey, color }: { dimKey: DimKey; color: string }) {
       pulseSpeed: 0.01 + Math.random() * 0.02,
     }));
 
-    // For emocional: fixed positions, fade in/out
-    const emoParticles = dimKey === "emocional" ? Array.from({ length: 30 }, () => ({
+    // For social: fixed positions, fade in/out
+    const emoParticles = dimKey === "social" ? Array.from({ length: 30 }, () => ({
       x: Math.random() * (W() || 400),
       y: Math.random() * (H() || 700),
       r: 1 + Math.random() * 2,
@@ -334,7 +336,7 @@ function ParticleCanvas({ dimKey, color }: { dimKey: DimKey; color: string }) {
           }
         });
 
-      } else if (dimKey === "social") {
+      } else if (dimKey === "artistica") {
         // Sinusoidal floating notes (pink/artística)
         particles.forEach((p, i) => {
           p.x += p.speed * 0.4;
@@ -347,7 +349,7 @@ function ParticleCanvas({ dimKey, color }: { dimKey: DimKey; color: string }) {
           ctx.fill();
         });
 
-      } else if (dimKey === "emocional" && emoParticles) {
+      } else if (dimKey === "social" && emoParticles) {
         // Appear/disappear city lights with connections
         emoParticles.forEach((p) => {
           p.opacity += p.fadeSpeed * p.fadeDir;
@@ -500,8 +502,8 @@ export default function LicaoCapaPage({ params }: PageProps) {
     dimKey === "identitaria" ? "cover-icon-glow"
     : dimKey === "naturalista" ? "cover-icon-bounce"
     : dimKey === "logica" ? "cover-icon-scan"
-    : dimKey === "emocional" ? "cover-icon-spin"
-    : ""; // social/pink: plain fade-in
+    : dimKey === "social" ? "cover-icon-spin"
+    : ""; // artistica: plain fade-in
 
   const iconStyle: React.CSSProperties =
     dimKey === "identitaria"
@@ -510,7 +512,7 @@ export default function LicaoCapaPage({ params }: PageProps) {
       ? { color: cor, opacity: 0, animationFillMode: "both", animationDelay: "800ms" }
       : dimKey === "logica"
       ? { color: cor, opacity: 0, animationFillMode: "both", animationDelay: "800ms" }
-      : dimKey === "emocional"
+      : dimKey === "social"
       ? { color: cor, opacity: 0, animationFillMode: "both", animationDelay: "800ms" }
       : { color: cor, opacity: 0, animation: "coverFadeIn 0.6s ease both", animationDelay: "800ms" };
 
@@ -633,7 +635,7 @@ export default function LicaoCapaPage({ params }: PageProps) {
         </div>
 
         {/* Title */}
-        {dimKey === "social" ? (
+        {dimKey === "artistica" ? (
           <TypewriterTitle text={info.titulo} color={cor} />
         ) : dimKey === "identitaria" ? (
           // Letter-by-letter
@@ -654,8 +656,8 @@ export default function LicaoCapaPage({ params }: PageProps) {
               </span>
             ))}
           </h1>
-        ) : dimKey === "emocional" ? (
-          // Shimmer pass
+        ) : dimKey === "social" ? (
+          // Shimmer pass (golden)
           <h1
             className="font-editorial cover-shimmer-title"
             style={{
@@ -671,7 +673,7 @@ export default function LicaoCapaPage({ params }: PageProps) {
             {info.titulo}
           </h1>
         ) : (
-          // Default: slide from left (naturalista, logica)
+          // Default: fade in (naturalista, logica)
           <h1
             className="font-editorial"
             style={{
