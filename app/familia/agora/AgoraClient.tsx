@@ -45,8 +45,6 @@ export default function AgoraClient({ profile, familiaId, criancas }: Props) {
   const [erro, setErro] = useState<string | null>(null);
   const [guardado, setGuardado] = useState(false);
 
-  const dashboardHref = tipo === "crianca" ? "/crianca/dashboard" : "/dashboard";
-
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
