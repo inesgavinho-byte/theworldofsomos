@@ -38,6 +38,8 @@ export default function LoginPage() {
 
       if (profile?.tipo === "admin") {
         router.push("/admin");
+      } else if (profile?.tipo === "crianca") {
+        router.push("/crianca/dashboard");
       } else {
         router.push("/dashboard");
       }
