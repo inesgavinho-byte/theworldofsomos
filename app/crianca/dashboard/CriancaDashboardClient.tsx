@@ -581,7 +581,7 @@ export default function CriancaDashboardClient({ profile, crianca }: Props) {
                 47 estrelas
               </p>
               <p style={{ fontSize: "12px", opacity: 0.5 }}>
-                Mais 3 para desbloqueares a recompensa
+                Continua a explorar
               </p>
             </div>
           </div>
