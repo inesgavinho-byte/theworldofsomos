@@ -42,9 +42,10 @@ const TAREFAS = [
 interface Props {
   profile: { nome: string; tipo: string } | null;
   crianca: any;
+  desafiosPendentes?: any[];
 }
 
-export default function CriancaDashboardClient({ profile, crianca }: Props) {
+export default function CriancaDashboardClient({ profile, crianca, desafiosPendentes = [] }: Props) {
   const router = useRouter();
   const nome = crianca?.nome ?? profile?.nome ?? "Explorador";
   const streak = 7;
@@ -195,6 +196,57 @@ export default function CriancaDashboardClient({ profile, crianca }: Props) {
             </div>
           ))}
         </div>
+
+        {/* Exercícios do livro — enviados pelo pai/mãe */}
+        {desafiosPendentes.length > 0 && (
+          <div style={{ marginBottom: "20px" }}>
+            {desafiosPendentes.map((desafio) => (
+              <Link key={desafio.id} href={`/crianca/exercicios-ia/${desafio.id}`}>
+                <div
+                  className="card-hover"
+                  style={{
+                    background: "rgba(96,165,250,0.12)",
+                    border: "1.5px solid rgba(96,165,250,0.35)",
+                    borderRadius: "20px",
+                    padding: "18px 20px",
+                    marginBottom: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "14px",
+                    cursor: "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "44px",
+                      height: "44px",
+                      borderRadius: "12px",
+                      background: "rgba(96,165,250,0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "22px",
+                      flexShrink: 0,
+                    }}
+                  >
+                    📚
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: "13px", fontWeight: 800, color: "#185fa5", marginBottom: "2px" }}>
+                      A tua mãe enviou-te exercícios novos!
+                    </p>
+                    <p style={{ fontSize: "12px", color: "var(--texto-secundario)", fontWeight: 600 }}>
+                      {desafio.conteudo?.tema ?? "Exercícios do livro"} · Toca para começar
+                    </p>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12H19M13 6L19 12L13 18" stroke="#185fa5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* Missão do dia */}
         <Link href={`/licao/${MISSAO.slug}/exercicios`}>

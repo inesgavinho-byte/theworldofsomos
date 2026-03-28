@@ -17,14 +17,31 @@ export default async function CriancaDashboardPage() {
     .eq("id", user.id)
     .single();
 
-  // Get the crianca record linked to this user
-  // (In a real setup this is linked differently; here we use email match)
-  const { data: criancas } = await supabase
+  // Find the criança linked to this auth user (via PIN login)
+  const { data: crianca } = await supabase
     .from("criancas")
     .select("*")
-    .limit(1);
+    .eq("user_id", user.id)
+    .single();
 
-  const crianca = criancas?.[0] ?? null;
+  // Fetch pending AI exercise challenges sent by the parent
+  let desafiosPendentes: any[] = [];
+  if (crianca?.id) {
+    const { data } = await supabase
+      .from("desafios_familia")
+      .select("id, conteudo, created_at")
+      .eq("crianca_id", crianca.id)
+      .eq("tipo", "exercicios_ia")
+      .eq("estado", "pendente")
+      .order("created_at", { ascending: false });
+    desafiosPendentes = data ?? [];
+  }
 
-  return <CriancaDashboardClient profile={profile} crianca={crianca} />;
+  return (
+    <CriancaDashboardClient
+      profile={profile}
+      crianca={crianca}
+      desafiosPendentes={desafiosPendentes}
+    />
+  );
 }
