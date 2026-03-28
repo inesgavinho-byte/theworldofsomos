@@ -825,22 +825,26 @@ export default function DashboardClient({ profile, familiaId, criancas, ultimosM
                   </div>
                   <button
                     onClick={() => openPinModal(c.id, c.nome)}
-                    title="Definir PIN"
+                    title={c.pin ? "Alterar PIN" : "Configurar PIN de acesso"}
                     style={{
                       flexShrink: 0,
-                      background: "rgba(167,139,250,0.2)",
-                      border: "1px solid rgba(167,139,250,0.35)",
+                      background: c.pin
+                        ? "rgba(167,139,250,0.2)"
+                        : "rgba(250,204,21,0.25)",
+                      border: c.pin
+                        ? "1px solid rgba(167,139,250,0.35)"
+                        : "1px solid rgba(250,204,21,0.5)",
                       borderRadius: "8px",
                       padding: "4px 10px",
                       fontSize: "11px",
                       fontWeight: 700,
                       fontFamily: "Nunito, sans-serif",
-                      color: "rgba(255,255,255,0.85)",
+                      color: c.pin ? "rgba(255,255,255,0.85)" : "#854f0b",
                       cursor: "none",
                       whiteSpace: "nowrap",
                     }}
                   >
-                    PIN
+                    {c.pin ? "PIN ✓" : "Definir PIN"}
                   </button>
                   </div>
                   {ultimosMomentos[c.id] && (
