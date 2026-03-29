@@ -149,9 +149,9 @@ export default function LandingPage() {
       <div
         style={{
           position: "fixed",
-          top: "16px",
+          top: "24px",
           right: "32px",
-          zIndex: 100,
+          zIndex: 10,
         }}
       >
         <Link href="/login">
