@@ -20,8 +20,6 @@ export default function StarField() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const colors = ["#6b5fa6", "#b5a99a", "#8b7fa6"];
-
     let stars: Star[] = [];
     let animFrame: number;
 
@@ -32,13 +30,13 @@ export default function StarField() {
     };
 
     const generateStars = () => {
-      const count = Math.floor((canvas.width * canvas.height) / 8000);
+      const count = Math.max(80, Math.floor((canvas.width * canvas.height) / 8000));
       stars = Array.from({ length: count }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: Math.random() * 1.2 + 0.3,
-        opacity: Math.random() * 0.5 + 0.2,
-        color: colors[Math.floor(Math.random() * colors.length)],
+        opacity: 0.4,
+        color: "#6b5fa6",
       }));
     };
 
@@ -56,7 +54,7 @@ export default function StarField() {
             ctx.beginPath();
             ctx.moveTo(stars[i].x, stars[i].y);
             ctx.lineTo(stars[j].x, stars[j].y);
-            ctx.strokeStyle = `rgba(139, 127, 166, ${0.12 * (1 - dist / 80)})`;
+            ctx.strokeStyle = `rgba(139, 127, 166, ${0.2 * (1 - dist / 80)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }

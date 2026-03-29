@@ -7,6 +7,7 @@ const PUBLIC_ROUTES = [
   "/",
   "/login",
   "/register",
+  "/recuperar-password",
   "/admin/login",
   "/crianca/login",
 ];

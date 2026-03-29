@@ -118,7 +118,6 @@ export default function LandingPage() {
       style={{
         position: "relative",
         zIndex: 1,
-        background: "var(--fundo-pai)",
       }}
     >
       {/* ── fixed logo ──────────────────────────────────────────────── */}
@@ -146,6 +145,35 @@ export default function LandingPage() {
         </Link>
       </div>
 
+      {/* ── fixed "Entrar" button ────────────────────────────────────── */}
+      <div
+        style={{
+          position: "fixed",
+          top: "16px",
+          right: "32px",
+          zIndex: 100,
+        }}
+      >
+        <Link href="/login">
+          <button
+            style={{
+              background: "transparent",
+              border: "1px solid #1a1714",
+              borderRadius: "2px",
+              padding: "8px 20px",
+              fontFamily: NU,
+              fontWeight: 700,
+              fontSize: "13px",
+              color: "var(--texto-principal)",
+              cursor: "none",
+              letterSpacing: "0.05em",
+            }}
+          >
+            Entrar
+          </button>
+        </Link>
+      </div>
+
       {/* ── HERO ────────────────────────────────────────────────────── */}
       <section
         style={{
@@ -157,6 +185,7 @@ export default function LandingPage() {
           textAlign: "center",
           padding: "0 24px",
           position: "relative",
+          background: "transparent",
         }}
       >
         {/* Logo mark */}
@@ -264,7 +293,7 @@ export default function LandingPage() {
       {/* ── SECTION 2 — A VERDADE ───────────────────────────────────── */}
       <section
         style={{
-          background: "var(--fundo-pai)",
+          background: "#ede9e1",
           padding: "120px 24px",
           textAlign: "center",
         }}
@@ -382,7 +411,7 @@ export default function LandingPage() {
       {/* ── SECTION 4 — O SONHO ─────────────────────────────────────── */}
       <section
         style={{
-          background: "var(--fundo-pai)",
+          background: "#ede9e1",
           padding: "120px 24px",
           textAlign: "center",
         }}
@@ -540,7 +569,7 @@ export default function LandingPage() {
       {/* ── SECTION 6 — CTA FINAL ───────────────────────────────────── */}
       <section
         style={{
-          background: "var(--fundo-pai)",
+          background: "#ede9e1",
           padding: "140px 24px",
           textAlign: "center",
         }}
