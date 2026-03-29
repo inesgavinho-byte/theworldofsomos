@@ -26,43 +26,40 @@ const CORES_DIMENSOES = [
 const COR_NEUTRA = "#b5a99a";
 
 const CONFIG = {
-  nosTotal: 120,
-  nosColoridos: 12,
-  distanciaMaxFio: 150,
-  opacidadeFioMax: 0.15,
-  velocidadeMovimento: 0.3,
+  nosTotal: 60,
+  nosColoridos: 10,
+  distanciaMaxFio: 100,
+  opacidadeFioMax: 0.19,
+  velocidadeMovimento: 0.1,
 };
 
-function criarNos(largura: number, altura: number, isMobile: boolean): No[] {
-  const total = isMobile ? 60 : CONFIG.nosTotal;
-  const nosColoridos = isMobile ? 6 : CONFIG.nosColoridos;
+function criarNos(largura: number, altura: number): No[] {
   const nos: No[] = [];
 
-  for (let i = 0; i < total; i++) {
-    const eColorido = i < nosColoridos;
+  for (let i = 0; i < CONFIG.nosTotal; i++) {
+    const eColorido = i < CONFIG.nosColoridos;
     const cor = eColorido
       ? CORES_DIMENSOES[i % CORES_DIMENSOES.length]
       : COR_NEUTRA;
 
-    const velocMax = CONFIG.velocidadeMovimento * (isMobile ? 0.5 : 1);
+    const velocMax = CONFIG.velocidadeMovimento;
     const velX = (Math.random() - 0.5) * velocMax * 2;
     const velY = (Math.random() - 0.5) * velocMax * 2;
 
     nos.push({
       id: i,
       x: Math.random() * largura,
-      y: Math.random() * largura,
+      y: Math.random() * altura,
       raio: eColorido ? Math.random() * 3 + 3 : Math.random() * 2 + 1.5,
       cor,
       opacidade: eColorido
         ? Math.random() * 0.35 + 0.45
         : Math.random() * 0.25 + 0.15,
-      velocidadeX: velX === 0 ? 0.1 : velX,
-      velocidadeY: velY === 0 ? 0.1 : velY,
-      pulsando: eColorido && i < nosColoridos / 2,
+      velocidadeX: velX === 0 ? 0.05 : velX,
+      velocidadeY: velY === 0 ? 0.05 : velY,
+      pulsando: eColorido,
       fasePulso: Math.random() * Math.PI * 2,
     });
-    nos[i].y = Math.random() * altura;
   }
 
   return nos;
@@ -96,8 +93,7 @@ export default function RedeViva() {
       canvas.style.width = w + "px";
       canvas.style.height = h + "px";
       ctx.scale(dpr, dpr);
-      const isMobile = w < 768;
-      nos = criarNos(w, h, isMobile);
+      nos = criarNos(w, h);
     };
 
     const dist = (a: No, b: No) => {
@@ -150,7 +146,7 @@ export default function RedeViva() {
               (1 - d / CONFIG.distanciaMaxFio) * CONFIG.opacidadeFioMax;
             ctx.beginPath();
             ctx.strokeStyle = `rgba(167, 139, 250, ${opacidade})`;
-            ctx.lineWidth = 0.5;
+            ctx.lineWidth = 1.8 * (1 - d / CONFIG.distanciaMaxFio);
             ctx.moveTo(nos[i].x, nos[i].y);
             ctx.lineTo(nos[j].x, nos[j].y);
             ctx.stroke();
@@ -197,7 +193,7 @@ export default function RedeViva() {
               (1 - d / CONFIG.distanciaMaxFio) * CONFIG.opacidadeFioMax;
             ctx.beginPath();
             ctx.strokeStyle = `rgba(167, 139, 250, ${opacidade})`;
-            ctx.lineWidth = 0.5;
+            ctx.lineWidth = 1.8 * (1 - d / CONFIG.distanciaMaxFio);
             ctx.moveTo(nos[i].x, nos[i].y);
             ctx.lineTo(nos[j].x, nos[j].y);
             ctx.stroke();
