@@ -162,11 +162,11 @@ export default function LandingPage() {
               borderRadius: "2px",
               padding: "8px 20px",
               fontFamily: NU,
-              fontWeight: 700,
+              fontWeight: 600,
               fontSize: "13px",
               color: "var(--texto-principal)",
               cursor: "none",
-              letterSpacing: "0.05em",
+              letterSpacing: "0.08em",
             }}
           >
             Entrar
@@ -224,10 +224,11 @@ export default function LandingPage() {
           <h1
             style={{
               fontFamily: CG,
-              fontSize: "clamp(28px, 5vw, 42px)",
+              fontSize: "clamp(32px, 5vw, 52px)",
               fontWeight: 300,
               fontStyle: "italic",
-              lineHeight: 1.4,
+              lineHeight: 1.15,
+              letterSpacing: "-0.01em",
               color: "var(--texto-principal)",
               maxWidth: "600px",
               margin: 0,
@@ -249,12 +250,13 @@ export default function LandingPage() {
           <p
             style={{
               fontFamily: NU,
-              fontSize: "16px",
+              fontSize: "15px",
               fontWeight: 400,
-              color: "var(--texto-secundario)",
+              color: "#a09080",
               maxWidth: "420px",
               margin: 0,
-              lineHeight: 1.75,
+              lineHeight: 1.7,
+              letterSpacing: "0.01em",
             }}
           >
             Há 300 000 anos que sobrevivemos a tudo.
@@ -308,12 +310,12 @@ export default function LandingPage() {
         >
           <p
             style={{
-              fontFamily: CG,
-              fontStyle: "italic",
-              fontSize: "13px",
-              letterSpacing: "0.3em",
+              fontFamily: NU,
+              fontSize: "11px",
+              fontWeight: 600,
+              letterSpacing: "0.18em",
               textTransform: "uppercase",
-              color: "var(--texto-secundario)",
+              color: "#a09080",
               margin: "0 0 24px",
             }}
           >
@@ -336,10 +338,10 @@ export default function LandingPage() {
           <p
             style={{
               fontFamily: NU,
-              fontSize: "17px",
+              fontSize: "15px",
               fontWeight: 400,
-              color: "var(--texto-secundario)",
-              lineHeight: 1.85,
+              color: "#a09080",
+              lineHeight: 1.8,
               margin: 0,
             }}
           >
@@ -367,12 +369,12 @@ export default function LandingPage() {
         <div ref={s3.ref}>
           <p
             style={{
-              fontFamily: CG,
-              fontStyle: "italic",
-              fontSize: "13px",
-              letterSpacing: "0.3em",
+              fontFamily: NU,
+              fontSize: "11px",
+              fontWeight: 600,
+              letterSpacing: "0.18em",
               textTransform: "uppercase",
-              color: "var(--texto-secundario)",
+              color: "#a09080",
               margin: "0 0 56px",
               ...reveal(s3.visible),
             }}
@@ -387,9 +389,9 @@ export default function LandingPage() {
                 style={{
                   fontFamily: CG,
                   fontStyle: "italic",
-                  fontSize: "clamp(22px, 4vw, 32px)",
+                  fontSize: "28px",
                   fontWeight: 300,
-                  lineHeight: 1.6,
+                  lineHeight: 1.8,
                   color: "var(--texto-principal)",
                   margin: "0 0 4px",
                   opacity: s3.visible ? 1 : 0,
@@ -424,12 +426,12 @@ export default function LandingPage() {
         >
           <p
             style={{
-              fontFamily: CG,
-              fontStyle: "italic",
-              fontSize: "13px",
-              letterSpacing: "0.3em",
+              fontFamily: NU,
+              fontSize: "11px",
+              fontWeight: 600,
+              letterSpacing: "0.18em",
               textTransform: "uppercase",
-              color: "var(--texto-secundario)",
+              color: "#a09080",
               margin: "0 0 16px",
             }}
           >
@@ -451,10 +453,10 @@ export default function LandingPage() {
           <p
             style={{
               fontFamily: NU,
-              fontSize: "17px",
+              fontSize: "15px",
               fontWeight: 400,
-              color: "var(--texto-secundario)",
-              lineHeight: 1.85,
+              color: "#a09080",
+              lineHeight: 1.8,
               margin: 0,
               whiteSpace: "pre-line",
             }}
@@ -482,10 +484,10 @@ export default function LandingPage() {
         >
           <p
             style={{
-              fontFamily: CG,
-              fontStyle: "italic",
-              fontSize: "13px",
-              letterSpacing: "0.3em",
+              fontFamily: NU,
+              fontSize: "11px",
+              fontWeight: 600,
+              letterSpacing: "0.18em",
               textTransform: "uppercase",
               color: "rgba(255,255,255,0.4)",
               margin: "0 0 24px",
@@ -609,10 +611,10 @@ export default function LandingPage() {
                 border: "none",
                 borderRadius: "2px",
                 padding: "16px 40px",
-                fontSize: "15px",
+                fontSize: "14px",
                 fontWeight: 700,
                 fontFamily: NU,
-                letterSpacing: "0.1em",
+                letterSpacing: "0.12em",
                 cursor: "none",
               }}
             >
