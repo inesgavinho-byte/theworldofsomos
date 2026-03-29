@@ -12,7 +12,7 @@ const PUBLIC_ROUTES = [
   "/crianca/login",
 ];
 
-const PUBLIC_PREFIXES = ["/leituras"];
+const PUBLIC_PREFIXES = ["/leituras", "/guilda"];
 
 function isPublicRoute(pathname: string): boolean {
   if (PUBLIC_ROUTES.includes(pathname)) return true;
@@ -26,10 +26,11 @@ export async function middleware(request: NextRequest) {
   // Update session (refresh tokens)
   const { supabaseResponse, user, supabase } = await updateSession(request);
 
-  // If route is public, allow through
+  // If route is public, allow through without session checks
   if (isPublicRoute(pathname)) {
-    // Redirect logged-in users away from auth pages
-    if (user && (pathname === "/login" || pathname === "/register")) {
+    // Only redirect logged-in users away from /login (not /register)
+    // Admins may visit /register to create test accounts
+    if (user && pathname === "/login") {
       // Check user type to redirect correctly
       const { data: profile } = await supabase
         .from("profiles")

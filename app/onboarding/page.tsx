@@ -86,21 +86,26 @@ export default function OnboardingPage() {
       membro = { familia_id: novaFamilia.id };
     }
 
-    const { error: insertError } = await supabase.from("criancas").insert({
-      familia_id: membro.familia_id,
-      nome,
-      data_nascimento: dataNascimento || null,
-      curriculo,
-      ano_escolar: anoEscolar,
-    });
+    const { data: novaCrianca, error: insertError } = await supabase
+      .from("criancas")
+      .insert({
+        familia_id: membro.familia_id,
+        nome,
+        data_nascimento: dataNascimento || null,
+        curriculo,
+        ano_escolar: anoEscolar,
+      })
+      .select("id")
+      .single();
 
-    if (insertError) {
+    if (insertError || !novaCrianca) {
       setError("Erro ao guardar o perfil. Tenta outra vez.");
       setLoading(false);
       return;
     }
 
-    router.push("/dashboard");
+    // Redirect to PIN setup so the child can login immediately
+    router.push(`/configurar-pin/${novaCrianca.id}`);
   };
 
   const inputStyle: React.CSSProperties = {

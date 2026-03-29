@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
+const CG = "'Cormorant Garamond', serif";
 const NU = "'Nunito', sans-serif";
 
 export default function RecuperarPasswordPage() {
@@ -118,8 +119,8 @@ export default function RecuperarPasswordPage() {
                 lineHeight: 1.6,
               }}
             >
-              Email enviado! Verifica a tua caixa de entrada e segue o link
-              para redefinir a palavra-passe.
+              Email enviado! Verifica a tua caixa de entrada e segue o link para
+              redefinir a palavra-passe.
             </div>
           ) : (
             <form
@@ -210,7 +211,10 @@ export default function RecuperarPasswordPage() {
               fontWeight: 600,
             }}
           >
-            <Link href="/login" style={{ color: "var(--texto-secundario)" }}>
+            <Link
+              href="/login"
+              style={{ color: "var(--texto-secundario)" }}
+            >
               ← Voltar ao login
             </Link>
           </p>

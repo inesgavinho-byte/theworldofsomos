@@ -61,14 +61,14 @@ function useTypewriter(
 /* ── constants ────────────────────────────────────────────────────────── */
 
 const PILARES = [
+  "Sei de onde venho.",
   "Sei onde estou.",
   "Descubro quem sou.",
   "Tenho quem me apoie.",
-  "Sei de onde venho.",
 ];
 
 const MOMENTO_TEXT =
-  '"Há 2500 anos, Sócrates foi condenado\nà morte por fazer perguntas.\n\nHoje fizeste o mesmo."';
+  '"Há 500 anos, Leonardo da Vinci\nenchia cadernos de perguntas\nsobre tudo o que via.\n\nHoje fizeste o mesmo."';
 
 /* ── styles ───────────────────────────────────────────────────────────── */
 
@@ -149,9 +149,9 @@ export default function LandingPage() {
       <div
         style={{
           position: "fixed",
-          top: "16px",
+          top: "24px",
           right: "32px",
-          zIndex: 100,
+          zIndex: 10,
         }}
       >
         <Link href="/login">
@@ -317,7 +317,7 @@ export default function LandingPage() {
               margin: "0 0 24px",
             }}
           >
-            A ESCOLA NÃO É O PROBLEMA
+            A ESCOLA TEM O SEU LUGAR
           </p>
 
           <h2
@@ -330,9 +330,7 @@ export default function LandingPage() {
               margin: "0 0 40px",
             }}
           >
-            O problema é acreditarmos
-            <br />
-            que a escola chega.
+            Nós temos o nosso.
           </h2>
 
           <p
@@ -653,7 +651,7 @@ export default function LandingPage() {
             margin: 0,
           }}
         >
-          SOMOS · 2026 · theworldofsomos.netlify.app
+          SOMOS · 2026 · theworldofsomos.com
         </p>
       </footer>
     </main>
