@@ -34,10 +34,18 @@ export default function StarField() {
       stars = Array.from({ length: count }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: Math.random() * 1.2 + 0.3,
-        opacity: 0.4,
+        radius: Math.random() * 2 + 1,
+        opacity: 0.7,
         color: "#6b5fa6",
       }));
+      // DEBUG: red 10px star in centre to confirm canvas is rendering
+      stars.push({
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        radius: 10,
+        opacity: 1,
+        color: "red",
+      });
     };
 
     const draw = () => {
@@ -92,8 +100,8 @@ export default function StarField() {
         position: "fixed",
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
+        width: "100vw",
+        height: "100vh",
         pointerEvents: "none",
         zIndex: 0,
       }}
