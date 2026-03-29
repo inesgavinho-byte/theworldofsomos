@@ -38,14 +38,7 @@ export default function StarField() {
         opacity: 0.7,
         color: "#6b5fa6",
       }));
-      // DEBUG: red 10px star in centre to confirm canvas is rendering
-      stars.push({
-        x: canvas.width / 2,
-        y: canvas.height / 2,
-        radius: 10,
-        opacity: 1,
-        color: "red",
-      });
+
     };
 
     const draw = () => {
