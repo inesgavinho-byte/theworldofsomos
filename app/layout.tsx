@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import CustomCursor from "@/components/CustomCursor";
-import StarField from "@/components/StarField";
+import RedeViva from "@/components/RedeViva";
 
 export const metadata: Metadata = {
   title: "SOMOS — Plataforma de Continuidade Educativa Familiar",
@@ -25,7 +25,7 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <StarField />
+        <RedeViva />
         <CustomCursor />
         {children}
       </body>
