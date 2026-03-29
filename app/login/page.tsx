@@ -215,6 +215,23 @@ export default function LoginPage() {
           <p
             style={{
               textAlign: "center",
+              marginTop: "16px",
+              fontSize: "13px",
+              color: "var(--texto-secundario)",
+              fontWeight: 600,
+            }}
+          >
+            <Link
+              href="/recuperar-password"
+              style={{ color: "var(--texto-secundario)" }}
+            >
+              Esqueceste a palavra-passe?
+            </Link>
+          </p>
+
+          <p
+            style={{
+              textAlign: "center",
               marginTop: "20px",
               fontSize: "13px",
               color: "var(--texto-secundario)",
