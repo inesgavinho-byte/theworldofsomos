@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const errorCode = searchParams.get("error_code");
+  const errorParam = searchParams.get("error");
+  const isExpiredLink =
+    errorCode === "otp_expired" || errorParam === "access_denied";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -101,6 +106,48 @@ export default function LoginPage() {
           >
             Entrar
           </h2>
+
+          {isExpiredLink && (
+            <div
+              style={{
+                background: "rgba(250, 204, 21, 0.12)",
+                border: "1px solid rgba(250, 204, 21, 0.4)",
+                borderRadius: "14px",
+                padding: "20px",
+                marginBottom: "24px",
+                textAlign: "center",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  color: "var(--amarelo-texto)",
+                  marginBottom: "16px",
+                  lineHeight: "1.5",
+                }}
+              >
+                O link de recuperação expirou.
+                <br />
+                Por favor solicita um novo link.
+              </p>
+              <Link
+                href="/recuperar-password"
+                style={{
+                  display: "inline-block",
+                  background: "var(--texto-principal)",
+                  color: "white",
+                  borderRadius: "10px",
+                  padding: "10px 20px",
+                  fontSize: "13px",
+                  fontWeight: 800,
+                  textDecoration: "none",
+                }}
+              >
+                Recuperar palavra-passe
+              </Link>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div>
