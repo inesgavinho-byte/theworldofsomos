@@ -43,6 +43,7 @@ export default async function AdminPage() {
     { href: "/admin/utilizadores", label: "Utilizadores", desc: "Gerir contas e permissões" },
     { href: "/admin/conteudo", label: "Conteúdo", desc: "Artigos, lições e exercícios" },
     { href: "/admin/estatisticas", label: "Estatísticas", desc: "Métricas de uso e engagement" },
+    { href: "/admin/guilda", label: "Guilda", desc: "Candidaturas e membros da Guilda" },
   ];
 
   const ROUTE_GROUPS = [
@@ -56,6 +57,7 @@ export default async function AdminPage() {
         { path: "/register", dinamica: false },
         { path: "/leituras", dinamica: false },
         { path: "/leituras/[slug]", dinamica: true },
+        { path: "/guilda", dinamica: false },
       ],
     },
     {
@@ -89,6 +91,7 @@ export default async function AdminPage() {
         { path: "/admin/utilizadores", dinamica: false },
         { path: "/admin/conteudo", dinamica: false },
         { path: "/admin/estatisticas", dinamica: false },
+        { path: "/admin/guilda", dinamica: false },
       ],
     },
   ];
@@ -198,7 +201,7 @@ export default async function AdminPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
+            gridTemplateColumns: "repeat(4, 1fr)",
             gap: "14px",
             marginBottom: "28px",
           }}
