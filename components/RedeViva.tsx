@@ -15,6 +15,30 @@ interface No {
   fasePulso: number;
 }
 
+interface Estrela {
+  x: number;
+  y: number;
+  raio: number;
+  pontas: number;
+  cor: string;
+  opacidade: number;
+  piscando: boolean;
+  fasePisca: number;
+  velPisca: number;
+}
+
+interface EstrelaCadente {
+  x: number;
+  y: number;
+  ang: number;
+  vel: number;
+  comprimento: number;
+  progresso: number;
+  cor: string;
+  ativa: boolean;
+  faisca: { x: number; y: number; opacidade: number } | null;
+}
+
 const CORES_DIMENSOES = [
   "#a78bfa", // Identitária — roxo
   "#4ade80", // Naturalista — verde
@@ -50,7 +74,7 @@ function criarNos(largura: number, altura: number): No[] {
       id: i,
       x: Math.random() * largura,
       y: Math.random() * altura,
-      raio: eColorido ? Math.random() * 3 + 3 : Math.random() * 2 + 1.5,
+      raio: eColorido ? Math.random() * 8 + 10 : Math.random() * 3 + 3,
       cor,
       opacidade: eColorido
         ? Math.random() * 0.35 + 0.45
@@ -63,6 +87,58 @@ function criarNos(largura: number, altura: number): No[] {
   }
 
   return nos;
+}
+
+function criarEstrelas(largura: number, altura: number): Estrela[] {
+  const estrelas: Estrela[] = [];
+  const todasCores = [...CORES_DIMENSOES, COR_NEUTRA];
+  const numEstrelas = 20 + Math.floor(Math.random() * 6); // 20-25
+
+  for (let i = 0; i < numEstrelas; i++) {
+    estrelas.push({
+      x: Math.random() * largura,
+      y: Math.random() * altura,
+      raio: Math.random() * 5 + 3, // 3-8px
+      pontas: Math.random() > 0.5 ? 4 : 6,
+      cor: todasCores[Math.floor(Math.random() * todasCores.length)],
+      opacidade: Math.random() * 0.4 + 0.3,
+      piscando: Math.random() > 0.5,
+      fasePisca: Math.random() * Math.PI * 2,
+      velPisca: 0.01 + Math.random() * 0.02,
+    });
+  }
+
+  return estrelas;
+}
+
+function desenharEstrela(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  raio: number,
+  pontas: number,
+  cor: string,
+  opacidade: number
+) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.beginPath();
+  for (let i = 0; i < pontas * 2; i++) {
+    const r = i % 2 === 0 ? raio : raio * 0.4;
+    const ang = (i * Math.PI) / pontas;
+    if (i === 0) {
+      ctx.moveTo(r * Math.sin(ang), -r * Math.cos(ang));
+    } else {
+      ctx.lineTo(r * Math.sin(ang), -r * Math.cos(ang));
+    }
+  }
+  ctx.closePath();
+  const opHex = Math.round(opacidade * 255)
+    .toString(16)
+    .padStart(2, "0");
+  ctx.fillStyle = cor + opHex;
+  ctx.fill();
+  ctx.restore();
 }
 
 export default function RedeViva() {
@@ -81,8 +157,11 @@ export default function RedeViva() {
     ).matches;
 
     let nos: No[] = [];
+    let estrelas: Estrela[] = [];
+    let estrelaCadente: EstrelaCadente | null = null;
     let animFrame: number;
     let dpr = window.devicePixelRatio || 1;
+    let shootingStarTimeout: ReturnType<typeof setTimeout>;
 
     const resize = () => {
       dpr = window.devicePixelRatio || 1;
@@ -94,6 +173,7 @@ export default function RedeViva() {
       canvas.style.height = h + "px";
       ctx.scale(dpr, dpr);
       nos = criarNos(w, h);
+      estrelas = criarEstrelas(w, h);
     };
 
     const dist = (a: No, b: No) => {
@@ -109,11 +189,42 @@ export default function RedeViva() {
       return { r, g, b };
     };
 
+    function lancarEstrelaCadente() {
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+      estrelaCadente = {
+        x: Math.random() * w * 0.6,
+        y: Math.random() * h * 0.3,
+        ang: (25 + Math.random() * 20) * Math.PI / 180,
+        vel: 8,
+        comprimento: 120 + Math.random() * 80,
+        progresso: 0,
+        cor: Math.random() > 0.5 ? "#ffffff" : "#a78bfa",
+        ativa: true,
+        faisca: null,
+      };
+      shootingStarTimeout = setTimeout(lancarEstrelaCadente, 8000 + Math.random() * 4000);
+    }
+
+    // Primeira estrela cadente após 3s
+    shootingStarTimeout = setTimeout(lancarEstrelaCadente, 3000);
+
     const animar = () => {
       const w = canvas.width / dpr;
       const h = canvas.height / dpr;
 
       ctx.clearRect(0, 0, w, h);
+
+      // 0. Desenhar estrelas fixas
+      estrelas.forEach((e) => {
+        let op = e.opacidade;
+        if (e.piscando) {
+          e.fasePisca += e.velPisca;
+          op = e.opacidade + Math.sin(e.fasePisca) * 0.15;
+          op = Math.max(0.1, Math.min(1, op));
+        }
+        desenharEstrela(ctx, e.x, e.y, e.raio, e.pontas, e.cor, op);
+      });
 
       // 1. Mover nós
       nos.forEach((no) => {
@@ -177,6 +288,62 @@ export default function RedeViva() {
         ctx.fill();
       });
 
+      // 4. Desenhar estrela cadente
+      if (estrelaCadente && estrelaCadente.ativa) {
+        const ec = estrelaCadente;
+        ec.progresso += ec.vel;
+
+        const cabecaX = ec.x + Math.cos(ec.ang) * ec.progresso;
+        const cabecaY = ec.y + Math.sin(ec.ang) * ec.progresso;
+
+        const caudaProgresso = Math.max(0, ec.progresso - ec.comprimento);
+        const caudaX = ec.x + Math.cos(ec.ang) * caudaProgresso;
+        const caudaY = ec.y + Math.sin(ec.ang) * caudaProgresso;
+
+        // Duração ~0.8s a 60fps = ~48 frames; com vel=8, percorre ~384px
+        // Considerar ativa enquanto a cauda estiver no ecrã
+        if (caudaX > w * 1.2 || caudaY > h * 1.2) {
+          // Deixar faísca no ponto final
+          ec.faisca = { x: cabecaX, y: cabecaY, opacidade: 1 };
+          ec.ativa = false;
+        } else {
+          // Desenhar rastro com gradiente
+          const rgb = hexToRgb(ec.cor);
+          const grad = ctx.createLinearGradient(caudaX, caudaY, cabecaX, cabecaY);
+          grad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0)`);
+          grad.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8)`);
+
+          ctx.beginPath();
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 2;
+          ctx.lineCap = "round";
+          ctx.moveTo(caudaX, caudaY);
+          ctx.lineTo(cabecaX, cabecaY);
+          ctx.stroke();
+
+          // Brilho na cabeça
+          ctx.beginPath();
+          ctx.arc(cabecaX, cabecaY, 3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.9)`;
+          ctx.fill();
+        }
+      }
+
+      // 5. Faísca residual
+      if (estrelaCadente && !estrelaCadente.ativa && estrelaCadente.faisca) {
+        const f = estrelaCadente.faisca;
+        f.opacidade -= 0.03;
+        if (f.opacidade > 0) {
+          const rgb = hexToRgb(estrelaCadente.cor);
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, 4 * f.opacidade, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${f.opacidade})`;
+          ctx.fill();
+        } else {
+          estrelaCadente = null;
+        }
+      }
+
       animFrame = requestAnimationFrame(animar);
     };
 
@@ -184,6 +351,11 @@ export default function RedeViva() {
       const w = canvas.width / dpr;
       const h = canvas.height / dpr;
       ctx.clearRect(0, 0, w, h);
+
+      // Estrelas fixas (estáticas)
+      estrelas.forEach((e) => {
+        desenharEstrela(ctx, e.x, e.y, e.raio, e.pontas, e.cor, e.opacidade);
+      });
 
       for (let i = 0; i < nos.length; i++) {
         for (let j = i + 1; j < nos.length; j++) {
@@ -230,6 +402,7 @@ export default function RedeViva() {
 
     return () => {
       cancelAnimationFrame(animFrame);
+      clearTimeout(shootingStarTimeout);
       window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", handleScroll);
     };
