@@ -190,6 +190,7 @@ export default function RedeViva() {
     };
 
     function lancarEstrelaCadente() {
+      if (!canvas) return;
       const w = canvas.width / dpr;
       const h = canvas.height / dpr;
       estrelaCadente = {
