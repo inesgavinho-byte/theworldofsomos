@@ -44,6 +44,7 @@ export default async function AdminPage() {
     { href: "/admin/conteudo", label: "Conteúdo", desc: "Artigos, lições e exercícios" },
     { href: "/admin/estatisticas", label: "Estatísticas", desc: "Métricas de uso e engagement" },
     { href: "/admin/guilda", label: "Guilda", desc: "Candidaturas e membros da Guilda" },
+    { href: "/admin/auditoria", label: "Auditoria", desc: "Registo de acções no sistema" },
   ];
 
   const ROUTE_GROUPS = [
@@ -92,6 +93,7 @@ export default async function AdminPage() {
         { path: "/admin/conteudo", dinamica: false },
         { path: "/admin/estatisticas", dinamica: false },
         { path: "/admin/guilda", dinamica: false },
+        { path: "/admin/auditoria", dinamica: false },
       ],
     },
   ];
@@ -201,7 +203,7 @@ export default async function AdminPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
             gap: "14px",
             marginBottom: "28px",
           }}

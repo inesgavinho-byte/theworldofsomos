@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/audit";
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<NextResponse> {
   try {
     // Authenticate the requesting parent
     const supabase = await createClient();
@@ -80,6 +81,13 @@ export async function POST(req: Request) {
               .from("criancas")
               .update({ user_id: found.id, pin: pinHash })
               .eq("id", criancaId);
+            await log({
+              userId: user.id,
+              action: 'child.pin_set',
+              entityType: 'crianca',
+              entityId: criancaId,
+              request: req,
+            });
             return NextResponse.json({ ok: true });
           }
         }
@@ -103,6 +111,13 @@ export async function POST(req: Request) {
         .update({ user_id: newUser.user.id, pin: pinHash })
         .eq("id", criancaId);
 
+      await log({
+        userId: user.id,
+        action: 'child.pin_set',
+        entityType: 'crianca',
+        entityId: criancaId,
+        request: req,
+      });
       return NextResponse.json({ ok: true });
     }
 
@@ -112,6 +127,13 @@ export async function POST(req: Request) {
       .update({ pin: pinHash })
       .eq("id", criancaId);
 
+    await log({
+      userId: user.id,
+      action: 'child.pin_set',
+      entityType: 'crianca',
+      entityId: criancaId,
+      request: req,
+    });
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     console.error("[definir-pin]", err);
