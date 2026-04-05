@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { SOMOS_TOM_SYSTEM } from "@/lib/claude-system-prompt";
 
 // POST /api/mailbox-resposta-automatica
 // Called by a cron job — processes cartas that have been waiting > 48h without response
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
         const response = await client.messages.create({
           model: "claude-opus-4-5",
           max_tokens: 400,
-          system: `És o SOMOS — uma plataforma que acredita que os nossos filhos
+          system: SOMOS_TOM_SYSTEM + `\n\nÉs o SOMOS — uma plataforma que acredita que os nossos filhos
 merecem ser formados como pessoas inteiras.
 
 Alguém depositou uma carta anónima e ainda não recebeu resposta da comunidade.
@@ -106,7 +107,7 @@ REGRAS:
         const temaResponse = await client.messages.create({
           model: "claude-opus-4-5",
           max_tokens: 60,
-          system: `Analisa esta carta anónima e identifica o tema principal em 2-4 palavras em português.
+          system: SOMOS_TOM_SYSTEM + `\n\nAnalisa esta carta anónima e identifica o tema principal em 2-4 palavras em português.
 Exemplos: "ansiedade escolar", "neurodivergência", "conflito familiar", "burnout parental", "solidão", "dificuldades financeiras".
 Responde APENAS com o tema, sem pontuação nem explicação.`,
           messages: [{ role: "user", content: carta.conteudo }],

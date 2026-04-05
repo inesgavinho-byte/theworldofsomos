@@ -1,4 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { SOMOS_TOM_SYSTEM } from "@/lib/claude-system-prompt";
+import { validarTom } from "@/lib/tom";
 
 export async function POST(req: Request) {
   try {
@@ -13,6 +15,7 @@ export async function POST(req: Request) {
     const response = await client.messages.create({
       model: "claude-opus-4-5",
       max_tokens: 300,
+      system: SOMOS_TOM_SYSTEM,
       messages: [
         {
           role: "user",
@@ -56,6 +59,14 @@ Responde APENAS com JSON válido:
     }
 
     const momento = JSON.parse(jsonMatch[0]);
+
+    // Validar tom do conteúdo gerado — log server-side, nunca mostrar ao utilizador
+    const textoGerado = [momento.para_crianca, momento.para_adulto].filter(Boolean).join(' ');
+    const { valido, avisos } = validarTom(textoGerado);
+    if (!valido) {
+      console.warn('[momento] Tom inválido em conteúdo IA:', avisos);
+    }
+
     return Response.json({ sucesso: true, momento });
   } catch (err) {
     console.error("[momento] erro:", err);

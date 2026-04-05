@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getDimensaoBySlug } from "@/lib/dimensoes";
 import { getLicaoBySlug } from "@/lib/licoes";
+import { editorial } from "@/lib/tom";
 import { createClient } from "@/lib/supabase/client";
 import { Suspense } from "react";
 
@@ -212,7 +213,7 @@ function ReflexaoContent({ slug }: { slug: string }) {
             margin: "0 auto",
           }}
         >
-          "Fizeste algo hoje que ontem ainda não sabias."
+          {editorial.fraseFinal}
         </p>
       </div>
 
