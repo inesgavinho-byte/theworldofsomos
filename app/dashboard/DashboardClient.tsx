@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
 import { getCurriculoConfig, formatAnoEscolar } from "@/lib/curriculo";
@@ -246,8 +245,8 @@ export default function DashboardClient({ profile, familiaId, criancas, ultimosM
   };
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    // Fix 10: usar API route para apagar cookie somos-context no logout
+    await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
   };
 
