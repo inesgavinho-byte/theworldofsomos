@@ -23,38 +23,64 @@
 ## Setup Local
 
 ```bash
-git clone https://github.com/inesgavinho-byte/somos
-cd somos
+git clone https://github.com/inesgavinho-byte/theworldofsomos
+cd theworldofsomos
 npm install
 cp .env.example .env.local
+# preencher .env.local com as variáveis abaixo
 npm run dev
+# http://localhost:3000
 ```
 
 ### Variáveis de Ambiente Obrigatórias
 
 ```env
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://[id].supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 SUPABASE_JWT_SECRET=...
+
+# Claude API
 ANTHROPIC_API_KEY=sk-ant-...
+
+# Email
 RESEND_API_KEY=re_...
+
+# Analytics
+NEXT_PUBLIC_POSTHOG_KEY=phc_...
+NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+
+# Cron (obrigatório em produção)
+CRON_SECRET=...
+
+# Stripe (Fase 2 — não activo ainda)
+# STRIPE_SECRET_KEY=sk_...
+# NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_...
+# STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-> **Nota:** No Netlify, usar o preset **Next.js** na integração Supabase para garantir o prefixo `NEXT_PUBLIC_` automático.
+> **Nota Netlify:** usar o preset **Next.js** na integração Supabase para garantir o prefixo `NEXT_PUBLIC_` automático.
 
 ---
 
 ## Autenticação
 
-Dois fluxos separados:
+Dois fluxos separados e intencionais:
 
-- **Pais** → `/login` (email + password)
-- **Crianças** → `/crianca/login` (PIN de 4 dígitos)
+- **Pais** → `/login` — email + password via Supabase Auth
+- **Crianças** → `/crianca/login` — PIN de 4 dígitos (hash bcrypt em `criancas.pin`)
 
-O middleware usa `@supabase/ssr` — **nunca** `@supabase/auth-helpers-nextjs`.
+O middleware usa **`@supabase/ssr`** — nunca `@supabase/auth-helpers-nextjs` (não existe neste projecto).
 
-### Lógica de Rotas
+### Protecção do PIN Infantil
+
+- PIN armazenado como hash bcrypt — nunca em plaintext
+- Lockout após 5 tentativas falhadas consecutivas
+- PIN configurado pelo adulto em `/configurar-pin/[criancaId]`
+- Sessão de criança isolada da sessão do adulto
+
+### Lógica de Rotas (middleware.ts)
 
 | Rota | Acesso |
 |------|--------|
@@ -62,6 +88,7 @@ O middleware usa `@supabase/ssr` — **nunca** `@supabase/auth-helpers-nextjs`.
 | `/admin/*` | `tipo = admin` |
 | `/crianca/*`, `/licao/*` | `tipo = crianca` ou `admin` |
 | `/dashboard`, `/onboarding` | `tipo = pai` ou `admin` |
+| Sem sessão | → redirect `/login` |
 
 ### Promover Utilizador a Admin
 
@@ -89,10 +116,11 @@ ON CONFLICT (id) DO UPDATE SET tipo = 'admin';
 | `/crianca/dashboard` | Dashboard da criança |
 | `/licao/[slug]` | Capa da lição |
 | `/licao/[slug]/conteudo` | Conteúdo narrativo |
-| `/licao/[slug]/exercicios` | Exercícios |
+| `/licao/[slug]/exercicios` | Exercícios (5 por sessão) |
 | `/licao/[slug]/reflexao` | Reflexão emocional |
-| `/licao/[slug]/momento` | O Momento (pós-sessão) |
+| `/licao/[slug]/momento` | O Momento (ecrã dedicado pós-sessão) |
 | `/familia` | Hub de exercícios em família |
+| `/familia/agora` | Desafio em tempo real (Supabase Realtime) |
 | `/guilda` | Candidaturas — A Guilda |
 | `/leituras` | Blog Fonte do Conhecimento |
 | `/admin` | Painel admin |
@@ -106,41 +134,53 @@ ON CONFLICT (id) DO UPDATE SET tipo = 'admin';
 ### Tabelas Principais
 
 ```
-profiles          — utilizadores (pai | crianca | admin)
-familias          — famílias e plano de subscrição
-familia_membros   — ligação utilizador ↔ família
-criancas          — perfil da criança (curriculo, PIN, estrelas, jarros)
-competencias      — competências por currículo e dimensão
-exercicios        — exercícios com conteúdo JSONB
-sessoes           — respostas + reflexão + O Momento
-progresso         — progresso por competência
-licoes            — metadados das lições (slug, dimensão, tipo)
-ninguem_te_conta  — 100 factos do Jarro de Pandora
-mailbox_cartas    — The Mail Box
+profiles            — utilizadores (pai | crianca | admin)
+familias            — famílias e plano (free | premium | trial)
+familia_membros     — ligação utilizador ↔ família + papel
+criancas            — perfil (curriculo, PIN hash, estrelas, jarros)
+competencias        — competências por currículo, dimensão e tipo
+exercicios          — exercícios com conteúdo JSONB
+sessoes             — respostas + reflexão + O Momento
+progresso           — progresso por competência
+licoes              — metadados das lições (slug, dimensão, tipo)
+ninguem_te_conta    — 100 factos desbloqueáveis (Jarro de Pandora)
+mailbox_cartas      — The Mail Box (cartas anónimas)
 guilda_candidaturas — candidaturas à Guilda
-geracoes_ia       — histórico de uploads de livros
+geracoes_ia         — histórico de uploads de livros + exercícios gerados
+desafios_familia    — desafios em família (tempo_real | assincrono | fisico)
 ```
 
 ### Tipos de Conteúdo
 
-- **Universal** — aparece para todas as crianças (Identitária + Social)
+- **Universal** — aparece para todas as crianças (dimensões Identitária + Social)
 - **Curricular** — filtrado pelo currículo da criança (PT, BNCC, Cambridge, IB, FR)
 
 ### RLS
 
-Todas as tabelas têm Row Level Security activo. Função auxiliar: `get_user_familia_id()`.
+Todas as tabelas têm Row Level Security activo.
+Função auxiliar: `get_user_familia_id()` — devolve a família do utilizador autenticado.
+
+> **Atenção:** RLS é necessário mas não suficiente. Ver `SECURITY.md` para hardening completo.
 
 ---
 
 ## API Routes
 
-| Route | Método | Descrição |
-|-------|--------|-----------|
-| `/api/gerar-exercicios` | POST | Claude Vision — gera exercícios de imagem/PDF |
-| `/api/momento` | POST | Claude API — gera O Momento após sessão |
-| `/api/mailbox-resposta-automatica` | POST | Claude API — responde cartas sem resposta (48h) |
-| `/api/guilda` | GET + POST | Membros públicos + candidatura |
-| `/api/admin/guilda` | GET + PATCH | Aprovar/rejeitar candidaturas |
+| Route | Método | Acesso | Descrição |
+|-------|--------|--------|-----------|
+| `/api/gerar-exercicios` | POST | Autenticado | Claude Vision — gera exercícios de imagem/PDF |
+| `/api/momento` | POST | Autenticado | Claude API — gera O Momento após sessão |
+| `/api/mailbox-resposta-automatica` | POST | CRON_SECRET | Claude API — responde cartas após 48h |
+| `/api/guilda` | GET + POST | Público / Autenticado | Membros + candidatura |
+| `/api/admin/guilda` | GET + PATCH | Admin | Aprovar/rejeitar candidaturas |
+
+### Regras de Quota (aplicadas server-side)
+
+| Funcionalidade | Free | Premium |
+|---------------|------|---------|
+| Upload de livros / geração IA | 2/dia | 10/dia |
+| Guilda — vagas por país | — | máx. 3 aprovados |
+| Guilda — total global | — | máx. 100 aprovados |
 
 ---
 
@@ -156,18 +196,21 @@ Todas as tabelas têm Row Level Security activo. Função auxiliar: `get_user_fa
 | Artística | `#f472b6` | `#993556` | `#3d1a2e` |
 | Social | `#facc15` | `#854f0b` | `#2a1f0a` |
 
+Fundos: pai `#ede9e1` · criança `#f5f2ec` · texto `#1a1714` · secundário `#a09080`
+
 ### Tipografia
 
 - **Títulos:** Cormorant Garamond (300, 400, 500, italic)
 - **UI:** Nunito (400, 600, 700, 800, 900)
 - **Regra:** nunca emojis nativos — sempre SVGs de linha
 
-### Convenções
+### Convenções Editoriais
 
 - A palavra **"problema"** nunca aparece na plataforma
 - Erros marcados em **âmbar** com símbolo `~` (nunca vermelho com `×`)
 - Personagens aparecem **apenas no feedback**, nunca durante a pergunta
 - Linguagem neutra — "a minha família" em vez de "o meu pai"
+- Jarro de Pandora: sem countdown para próximo desbloqueio — surpresa preservada
 
 ---
 
@@ -183,6 +226,8 @@ Todas as tabelas têm Row Level Security activo. Função auxiliar: `get_user_fa
 | Nora, Kwame | Social |
 | Tomas, Layla | Identitária |
 
+Vídeos animados: `MAYA.mp4`, `Amara.mp4`
+
 **Máscara para fundir fundo preto:**
 ```css
 mask-image: radial-gradient(ellipse 90% 80% at 50% 55%, transparent 30%, black 80%),
@@ -197,7 +242,7 @@ mask-image: radial-gradient(ellipse 90% 80% at 50% 55%, transparent 30%, black 8
 
 - Deploy automático de commits na branch **`main`**
 - Branches `claude/*` **não** fazem deploy — fazer merge para `main`
-- Netlify Supabase ID: `bkprgvheubsoicwaoiuw`
+- Build: `npm run build`
 
 ### Supabase URL Configuration
 
@@ -209,7 +254,7 @@ Redirect URLs: https://theworldofsomos.com/**
 
 ### DNS
 
-Domínio `theworldofsomos.com` gerido pelo GoDaddy com nameservers a apontar para o Netlify:
+`theworldofsomos.com` (GoDaddy) com nameservers a apontar para Netlify:
 ```
 dns1.p06.nsone.net
 dns2.p06.nsone.net
@@ -219,22 +264,26 @@ dns4.p06.nsone.net
 
 ---
 
-## Funcionalidades Chave
+## Observabilidade
 
-### O Momento
-Gerado pela Claude API no fim de cada sessão. Ecrã dedicado `/licao/[slug]/momento`. Regra: apresentar sempre quem é a figura histórica antes do Momento.
+| Camada | Ferramenta |
+|--------|-----------|
+| Analytics de produto | PostHog |
+| Erros de frontend | PostHog + console Netlify |
+| Logs de API | Netlify Functions logs |
+| Custos Claude | Anthropic Console |
+| Cron jobs | Logs Netlify + alertas manuais |
 
-### O Jarro de Pandora
-A cada 25 estrelas, o jarro abre. Nome historicamente correcto — *pithos* grego (não "caixa" — erro de Erasmo). Primeiro desbloqueio inclui sempre a história do jarro. **Sem countdown** para o próximo desbloqueio.
+**Monitorizar activamente:**
+- Custo diário da Claude API
+- Taxa de erro em `/api/gerar-exercicios` e `/api/momento`
+- Candidaturas pendentes na Guilda
 
-### Upload de Livros + IA
-Família fotografa página do livro → Claude Vision gera 5 exercícios no idioma do currículo. Limite: 10/dia Premium, 2/dia Free.
+---
 
-### The Mail Box
-Cartas anónimas entre membros da comunidade. Sem resposta em 48h → SOMOS responde via Claude API. Sem resposta em 7 dias → transforma-se em conteúdo devolvido ao autor.
+## Segurança
 
-### A Guilda
-100 colaboradores globais. Máximo 3 por país. Candidaturas em `/guilda`.
+Ver [`SECURITY.md`](./SECURITY.md) para documentação completa.
 
 ---
 
@@ -244,7 +293,7 @@ Cartas anónimas entre membros da comunidade. Sem resposta em 48h → SOMOS resp
 Autenticação, dashboards, exercícios, reflexão, O Momento, Jarro de Pandora, 15 lições, admin, landing page, A Guilda, domínio próprio.
 
 ### Fase 2 — Diferenciadores
-Upload de livros + IA, exercícios em família, The Mail Box, currículos internacionais com conteúdo, Stripe.
+Upload de livros + IA, exercícios em família, The Mail Box, currículos internacionais, Stripe.
 
 ### Fase 3 — Crescimento
 O Testamento da Criança, O Atlas Pessoal, O Mentor Invisível, A Teia das Civilizações, A Incubadora, A Herança.
