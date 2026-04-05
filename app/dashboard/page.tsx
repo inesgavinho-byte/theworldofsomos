@@ -18,13 +18,15 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
-  const { data: familyMember } = await supabase
+  // Fix 5: ordenar por created_at ascending para determinismo quando há múltiplas famílias
+  const { data: memberships } = await supabase
     .from("familia_membros")
-    .select("familia_id, familias(nome, plano)")
+    .select("familia_id, papel, familias(nome, plano)")
     .eq("profile_id", user.id)
-    .single();
+    .order("created_at", { ascending: true });
 
-  const familiaId = (familyMember as any)?.familia_id;
+  const familyMember = memberships?.[0] ?? null;
+  const familiaId = (familyMember as any)?.familia_id ?? null;
 
   let criancas: any[] = [];
   if (familiaId) {
@@ -51,6 +53,8 @@ export default async function DashboardPage() {
     }
   }
 
+  // Fix 6: roles[] é fonte de verdade. tipo é fallback legacy durante transição.
+  // Remover fallback tipo quando Fase 1.5 estiver completa.
   const isAdmin =
     (Array.isArray(profile?.roles) && profile.roles.includes("admin")) ||
     profile?.tipo === "admin";

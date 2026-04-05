@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
+import { log } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -21,6 +22,8 @@ export async function POST(request: NextRequest) {
 
   // Only admins can switch to admin role
   if (activeRole === "admin") {
+    // Fix 8: validar server-side que o utilizador tem roles.includes('admin')
+    // Fix 6: roles[] é fonte de verdade. tipo é fallback legacy durante transição.
     const { data: profile } = await supabase
       .from("profiles")
       .select("tipo, roles")
@@ -48,11 +51,21 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const roleAnterior = ctx.activeRole ?? null;
   ctx.activeRole = activeRole;
 
+  await log({
+    userId: user.id,
+    action: 'auth.context_switch',
+    metadata: { de: roleAnterior, para: activeRole },
+    request,
+  });
+
   const response = NextResponse.json({ ok: true, activeRole });
+  // Fix 2: cookie somos-context com httpOnly, secure (produção), sameSite lax
   response.cookies.set("somos-context", JSON.stringify(ctx), {
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
   });

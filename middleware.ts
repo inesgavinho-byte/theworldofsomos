@@ -10,7 +10,12 @@ const PUBLIC_ROUTES = [
   "/crianca/login",
 ];
 
-const PUBLIC_PREFIXES = ["/leituras", "/guilda", "/api/guilda"];
+const PUBLIC_PREFIXES = [
+  "/leituras",
+  "/guilda",
+  "/api/guilda",
+  "/mudar-contexto", // Fix 7: evitar redirect loop ao confirmar mudança de contexto
+];
 
 function isPublicRoute(pathname: string): boolean {
   if (PUBLIC_ROUTES.includes(pathname)) return true;
@@ -44,8 +49,7 @@ export async function middleware(request: NextRequest) {
 
   // Not authenticated — redirect to login
   if (!user) {
-    const isChildRoute =
-      pathname.startsWith("/crianca/") || pathname.startsWith("/licao/");
+    const isChildRoute = pathname.startsWith("/crianca/");
     const loginUrl = isChildRoute ? "/crianca/login" : "/login";
     return NextResponse.redirect(new URL(loginUrl, request.url));
   }
@@ -57,28 +61,29 @@ export async function middleware(request: NextRequest) {
     .eq("id", user.id)
     .single();
 
+  // Fix 6: roles[] é fonte de verdade. tipo é fallback legacy durante transição.
+  // Remover fallback tipo quando Fase 1.5 estiver completa.
   const isAdmin =
     (Array.isArray(profile?.roles) && profile.roles.includes("admin")) ||
     profile?.tipo === "admin";
   const isCrianca = profile?.tipo === "crianca";
 
-  // Read somos-context cookie (default to family mode)
-  const contextCookie = request.cookies.get("somos-context")?.value;
-  let context: { activeRole: "family" | "admin" } = { activeRole: "family" };
-  if (contextCookie) {
-    try {
-      context = JSON.parse(contextCookie);
-    } catch {
-      // malformed cookie — treat as default
-    }
+  // Fix 1: Cookie parsing seguro — try/catch com fallback completo
+  // Fix 4: Fallback sempre com estrutura completa
+  const DEFAULT_CONTEXT = { activeRole: "family" as const, activeFamilyId: null, activeChildId: null };
+  let context: { activeRole: "family" | "admin"; activeFamilyId: string | null; activeChildId: string | null } =
+    DEFAULT_CONTEXT;
+  try {
+    const raw = request.cookies.get("somos-context")?.value;
+    if (raw) context = JSON.parse(raw);
+  } catch {
+    // Fix 1: cookie corrompido → fallback silencioso, não crasha
+    context = { ...DEFAULT_CONTEXT };
   }
 
-  // Initialize cookie in response if missing
-  const needsCookieInit = !contextCookie;
-
-  // Child routing
+  // Child routing — Fix 3: /licao removido daqui (serve criança E adulto)
   if (isCrianca) {
-    if (pathname.startsWith("/crianca") || pathname.startsWith("/licao")) {
+    if (pathname.startsWith("/crianca")) {
       return supabaseResponse;
     }
     return NextResponse.redirect(new URL("/crianca/dashboard", request.url));
@@ -98,22 +103,18 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Family/parent routes — any authenticated non-crianca user
-  const response = needsCookieInit ? (() => {
-    const r = NextResponse.next({ request });
-    // Copy Supabase auth cookies from supabaseResponse
-    supabaseResponse.cookies.getAll().forEach(({ name, value, ...opts }) => {
-      r.cookies.set(name, value, opts);
-    });
-    r.cookies.set("somos-context", JSON.stringify({ activeRole: "family", activeFamilyId: null, activeChildId: null }), {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-    });
-    return r;
-  })() : supabaseResponse;
+  // Fix 9: User sem família → onboarding
+  // Fix 2: Não escrever cookie no middleware — só ler. Cookie é gerido pelo /api/auth/login.
+  if (
+    context.activeFamilyId === null &&
+    !pathname.startsWith("/onboarding") &&
+    !pathname.startsWith("/api/")
+  ) {
+    return NextResponse.redirect(new URL("/onboarding", request.url));
+  }
 
-  return response;
+  // Family/parent routes — any authenticated non-crianca user
+  return supabaseResponse;
 }
 
 export const config = {
