@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 const DIAS_SEMANA = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 const HOJE_IDX = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
@@ -51,8 +50,8 @@ export default function CriancaDashboardClient({ profile, crianca, desafiosPende
   const streak = 7;
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    // Fix 10: usar API route para apagar cookie somos-context no logout
+    await fetch("/api/auth/logout", { method: "POST" });
     router.push("/crianca/login");
   };
 

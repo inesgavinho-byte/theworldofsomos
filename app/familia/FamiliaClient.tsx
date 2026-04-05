@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 interface Crianca {
   id: string;
@@ -65,8 +64,8 @@ export default function FamiliaClient({
   const tipo = profile.tipo;
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    // Fix 10: usar API route para apagar cookie somos-context no logout
+    await fetch("/api/auth/logout", { method: "POST" });
     router.push(tipo === "crianca" ? "/crianca/login" : "/login");
   };
 
