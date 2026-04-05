@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, CSSProperties } from "react";
 
 interface AuditLog {
   id: string;
@@ -81,7 +81,7 @@ export default function AuditoriaClient({ logs }: Props) {
     return Array.from(tipos).sort();
   }, [logs]);
 
-  const inputStyle: React.CSSProperties = {
+  const inputStyle: CSSProperties = {
     padding: "8px 12px",
     borderRadius: "10px",
     border: "1.5px solid rgba(160,144,128,0.3)",
@@ -93,7 +93,7 @@ export default function AuditoriaClient({ logs }: Props) {
     color: "var(--texto-principal)",
   };
 
-  const selectStyle: React.CSSProperties = {
+  const selectStyle: CSSProperties = {
     ...inputStyle,
     cursor: "pointer",
   };
