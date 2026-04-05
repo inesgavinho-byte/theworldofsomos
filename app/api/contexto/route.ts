@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
+import { log } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -48,7 +49,15 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const roleAnterior = ctx.activeRole ?? null;
   ctx.activeRole = activeRole;
+
+  await log({
+    userId: user.id,
+    action: 'auth.context_switch',
+    metadata: { de: roleAnterior, para: activeRole },
+    request,
+  });
 
   const response = NextResponse.json({ ok: true, activeRole });
   response.cookies.set("somos-context", JSON.stringify(ctx), {

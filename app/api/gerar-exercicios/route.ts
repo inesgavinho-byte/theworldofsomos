@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { log } from "@/lib/audit";
 
 export async function POST(req: Request) {
   try {
@@ -143,6 +144,19 @@ FORMATO DE RESPOSTA — responde APENAS com JSON válido, sem markdown:
         .update({ exercicios_gerados: exercicios, estado: "concluido" })
         .eq("id", geracao.id);
     }
+
+    await log({
+      userId: user.id,
+      action: 'ai.exercises_generated',
+      entityType: 'geracao_ia',
+      entityId: geracao?.id,
+      metadata: {
+        curriculo,
+        tipo_upload: tipoUpload ?? 'imagem',
+        num_exercicios: exercicios?.exercicios?.length ?? 0,
+      },
+      request: req,
+    });
 
     return NextResponse.json({ sucesso: true, exercicios });
   } catch (err: any) {
