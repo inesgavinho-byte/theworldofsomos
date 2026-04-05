@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { SOMOS_TOM_SYSTEM } from "@/lib/claude-system-prompt";
+import { validarTom } from "@/lib/tom";
 import { log } from "@/lib/audit";
 
 export async function POST(req: Request) {
@@ -70,7 +72,7 @@ export async function POST(req: Request) {
 
     const client = new Anthropic();
 
-    const systemPrompt = `És um especialista em educação do currículo ${curriculo} para ${anoEscolar}.
+    const systemPrompt = SOMOS_TOM_SYSTEM + `\n\nÉs um especialista em educação do currículo ${curriculo} para ${anoEscolar}.
 A tua tarefa é analisar uma página de livro escolar e gerar 5 exercícios de escolha múltipla.
 
 REGRAS:
@@ -135,6 +137,15 @@ FORMATO DE RESPOSTA — responde APENAS com JSON válido, sem markdown:
       const match = content.text.match(/\{[\s\S]*\}/);
       if (!match) throw new Error("Não consegui interpretar a resposta da IA");
       exercicios = JSON.parse(match[0]);
+    }
+
+    // Validar tom do conteúdo gerado — log server-side, nunca mostrar ao utilizador
+    const textoExercicios = (exercicios.exercicios ?? [])
+      .map((e: any) => [e.pergunta, e.explicacao, ...(e.opcoes ?? [])].join(' '))
+      .join(' ');
+    const { valido, avisos } = validarTom(textoExercicios);
+    if (!valido) {
+      console.warn('[gerar-exercicios] Tom inválido em conteúdo IA:', avisos);
     }
 
     // Update record with result
