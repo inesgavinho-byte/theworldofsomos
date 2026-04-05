@@ -41,11 +41,10 @@ export default function LoginPage() {
         .eq("id", data.user.id)
         .single();
 
-      if (profile?.tipo === "admin") {
-        router.push("/admin");
-      } else if (profile?.tipo === "crianca") {
+      if (profile?.tipo === "crianca") {
         router.push("/crianca/dashboard");
       } else {
+        // Admins and parents always start in /dashboard (family mode)
         router.push("/dashboard");
       }
     }

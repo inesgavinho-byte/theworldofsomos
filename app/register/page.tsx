@@ -46,6 +46,7 @@ export default function RegisterPage() {
         id: data.user.id,
         nome,
         tipo: "pai",
+        roles: [],
       });
 
       // Create family

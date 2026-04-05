@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import DashboardClient from "./DashboardClient";
 
 export default async function DashboardPage() {
@@ -13,7 +14,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("nome, tipo")
+    .select("nome, tipo, roles")
     .eq("id", user.id)
     .single();
 
@@ -50,12 +51,33 @@ export default async function DashboardPage() {
     }
   }
 
+  const isAdmin =
+    (Array.isArray(profile?.roles) && profile.roles.includes("admin")) ||
+    profile?.tipo === "admin";
+
+  // Read active role from context cookie
+  const cookieStore = await cookies();
+  const contextCookie = cookieStore.get("somos-context")?.value;
+  let activeRole: "family" | "admin" = "family";
+  if (contextCookie) {
+    try {
+      const ctx = JSON.parse(contextCookie);
+      if (ctx.activeRole === "admin" || ctx.activeRole === "family") {
+        activeRole = ctx.activeRole;
+      }
+    } catch {
+      // ignore malformed cookie
+    }
+  }
+
   return (
     <DashboardClient
       profile={profile}
       familiaId={familiaId}
       criancas={criancas}
       ultimosMomentos={ultimosMomentos}
+      isAdmin={isAdmin}
+      activeRole={activeRole}
     />
   );
 }
