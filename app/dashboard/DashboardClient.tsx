@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
 import { getCurriculoConfig, formatAnoEscolar } from "@/lib/curriculo";
@@ -134,13 +133,15 @@ function hoje(): string {
 }
 
 interface Props {
-  profile: { nome: string; tipo: string } | null;
+  profile: { nome: string; tipo: string; roles?: string[] } | null;
   familiaId: string | null;
   criancas: any[];
   ultimosMomentos?: Record<string, { titulo_licao: string; momento_adulto: string; created_at: string }>;
+  isAdmin?: boolean;
+  activeRole?: "family" | "admin";
 }
 
-export default function DashboardClient({ profile, familiaId, criancas, ultimosMomentos = {} }: Props) {
+export default function DashboardClient({ profile, familiaId, criancas, ultimosMomentos = {}, isAdmin = false, activeRole = "family" }: Props) {
   const router = useRouter();
   const licaoHoje = LICOES[0];
   const outrasLicoes = LICOES.slice(1, 5);
@@ -244,9 +245,27 @@ export default function DashboardClient({ profile, familiaId, criancas, ultimosM
   };
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    // Fix 10: usar API route para apagar cookie somos-context no logout
+    await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
+  };
+
+  const switchToAdmin = async () => {
+    await fetch("/api/contexto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ activeRole: "admin" }),
+    });
+    router.push("/admin");
+  };
+
+  const switchToFamily = async () => {
+    await fetch("/api/contexto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ activeRole: "family" }),
+    });
+    router.refresh();
   };
 
   return (
@@ -405,7 +424,36 @@ export default function DashboardClient({ profile, familiaId, criancas, ultimosM
             }}
           >
             {profile?.nome ?? ""}
+            {isAdmin && activeRole === "family" && (
+              <span style={{
+                fontSize: "11px",
+                color: "#a09080",
+                letterSpacing: "0.05em",
+                opacity: 0.7,
+                fontFamily: "Nunito, sans-serif",
+                marginLeft: "4px",
+              }}>
+                · admin
+              </span>
+            )}
           </span>
+          {isAdmin && (
+            <button
+              onClick={activeRole === "family" ? switchToAdmin : switchToFamily}
+              style={{
+                fontSize: "12px",
+                color: "#a09080",
+                background: "transparent",
+                border: "0.5px solid rgba(160,144,128,0.3)",
+                borderRadius: "4px",
+                padding: "4px 10px",
+                cursor: "none",
+                fontFamily: "Nunito, sans-serif",
+              }}
+            >
+              {activeRole === "family" ? "Ir para admin" : "Voltar à família"}
+            </button>
+          )}
           <button
             onClick={handleLogout}
             style={{

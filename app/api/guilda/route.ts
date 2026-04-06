@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/audit";
 
 export async function GET() {
   const supabase = createAdminClient();
@@ -140,6 +141,13 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    await log({
+      action: 'guilda.apply',
+      entityType: 'guilda_candidatura',
+      metadata: { pais: pais_codigo, perfil, estado },
+      request,
+    });
 
     return NextResponse.json({
       success: true,

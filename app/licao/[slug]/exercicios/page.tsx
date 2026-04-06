@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getDimensaoBySlug } from "@/lib/dimensoes";
+import { feedbackCrianca } from "@/lib/tom";
 
 const EXERCICIOS_POR_SLUG: Record<string, { pergunta: string; opcoes: string[]; correta: number; explicacao: string }[]> = {
   "floresta-tropical": [
@@ -517,8 +518,6 @@ const PERSONAGEM_POR_SLUG: Record<string, { arquivo: string; video?: string }> =
   "vida-secreta-das-plantas": { arquivo: "Sofia_experiencias.png" },
 };
 
-const FRASES_ACERTO = ["Muito bem!", "Acertaste!", "Excelente!"];
-const FRASES_ERRO = ["Quase!", "Tenta de novo!", "Não desistas!"];
 
 function getPersonagem(slug: string, dimensaoSlug: string, questionIndex: number) {
   if (PERSONAGEM_POR_SLUG[slug]) return PERSONAGEM_POR_SLUG[slug];
@@ -541,19 +540,18 @@ export default function ExerciciosPage({ params }: PageProps) {
   const [confirmada, setConfirmada] = useState(false);
   const [respostas, setRespostas] = useState<boolean[]>([]);
   const [estrelas, setEstrelas] = useState(0);
+  const [fraseFeedback, setFraseFeedback] = useState<string>('');
 
   const exercicio = exercicios[atual];
   const total = exercicios.length;
   const correta = selecionada === exercicio.correta;
 
   const personagem = getPersonagem(slug, dim.slug, atual);
-  const fraseFeedback = correta
-    ? FRASES_ACERTO[atual % FRASES_ACERTO.length]
-    : FRASES_ERRO[atual % FRASES_ERRO.length];
 
   const confirmar = () => {
     if (selecionada === null) return;
     setConfirmada(true);
+    setFraseFeedback(feedbackCrianca(correta));
     if (correta) {
       setEstrelas((e) => e + 1);
     }
@@ -567,6 +565,7 @@ export default function ExerciciosPage({ params }: PageProps) {
       setAtual((a) => a + 1);
       setSelecionada(null);
       setConfirmada(false);
+      setFraseFeedback('');
     } else {
       // Done — go to reflexao
       const params = new URLSearchParams({

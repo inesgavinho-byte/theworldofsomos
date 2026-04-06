@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { log } from "@/lib/audit";
 
 export async function POST(req: Request) {
   try {
@@ -64,6 +65,14 @@ export async function POST(req: Request) {
       console.error("Erro ao responder carta:", updateError);
       return NextResponse.json({ erro: "Erro ao guardar a resposta." }, { status: 500 });
     }
+
+    await log({
+      userId: user.id,
+      action: 'mailbox.letter_responded',
+      entityType: 'mailbox_carta',
+      entityId: cartaId,
+      request: req,
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err) {

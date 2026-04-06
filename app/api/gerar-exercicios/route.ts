@@ -1,6 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { SOMOS_TOM_SYSTEM } from "@/lib/claude-system-prompt";
+import { validarTom } from "@/lib/tom";
+import { log } from "@/lib/audit";
 
 export async function POST(req: Request) {
   try {
@@ -69,7 +72,7 @@ export async function POST(req: Request) {
 
     const client = new Anthropic();
 
-    const systemPrompt = `És um especialista em educação do currículo ${curriculo} para ${anoEscolar}.
+    const systemPrompt = SOMOS_TOM_SYSTEM + `\n\nÉs um especialista em educação do currículo ${curriculo} para ${anoEscolar}.
 A tua tarefa é analisar uma página de livro escolar e gerar 5 exercícios de escolha múltipla.
 
 REGRAS:
@@ -136,6 +139,15 @@ FORMATO DE RESPOSTA — responde APENAS com JSON válido, sem markdown:
       exercicios = JSON.parse(match[0]);
     }
 
+    // Validar tom do conteúdo gerado — log server-side, nunca mostrar ao utilizador
+    const textoExercicios = (exercicios.exercicios ?? [])
+      .map((e: any) => [e.pergunta, e.explicacao, ...(e.opcoes ?? [])].join(' '))
+      .join(' ');
+    const { valido, avisos } = validarTom(textoExercicios);
+    if (!valido) {
+      console.warn('[gerar-exercicios] Tom inválido em conteúdo IA:', avisos);
+    }
+
     // Update record with result
     if (geracao?.id) {
       await supabase
@@ -143,6 +155,19 @@ FORMATO DE RESPOSTA — responde APENAS com JSON válido, sem markdown:
         .update({ exercicios_gerados: exercicios, estado: "concluido" })
         .eq("id", geracao.id);
     }
+
+    await log({
+      userId: user.id,
+      action: 'ai.exercises_generated',
+      entityType: 'geracao_ia',
+      entityId: geracao?.id,
+      metadata: {
+        curriculo,
+        tipo_upload: tipoUpload ?? 'imagem',
+        num_exercicios: exercicios?.exercicios?.length ?? 0,
+      },
+      request: req,
+    });
 
     return NextResponse.json({ sucesso: true, exercicios });
   } catch (err: any) {

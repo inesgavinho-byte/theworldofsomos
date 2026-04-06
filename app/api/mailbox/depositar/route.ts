@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { log } from "@/lib/audit";
 
 export async function POST(req: Request) {
   try {
@@ -42,6 +43,14 @@ export async function POST(req: Request) {
       console.error("Erro ao depositar carta:", error);
       return NextResponse.json({ erro: "Erro ao guardar a carta." }, { status: 500 });
     }
+
+    await log({
+      userId: user.id,
+      action: 'mailbox.letter_sent',
+      entityType: 'mailbox_carta',
+      entityId: carta.id,
+      request: req,
+    });
 
     return NextResponse.json({ id: carta.id });
   } catch (err) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
+import { log } from "@/lib/audit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -141,6 +142,17 @@ export async function PATCH(request: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: "Erro ao actualizar" }, { status: 500 });
+  }
+
+  if (estado === 'aprovado' || estado === 'rejeitado') {
+    await log({
+      userId: user.id,
+      action: estado === 'aprovado' ? 'admin.guilda_approve' : 'admin.guilda_reject',
+      entityType: 'guilda_candidatura',
+      entityId: id,
+      metadata: { estado },
+      request,
+    });
   }
 
   return NextResponse.json({ success: true });
