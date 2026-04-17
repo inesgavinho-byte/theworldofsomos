@@ -29,6 +29,9 @@ export type AuditAction =
   | 'admin.guilda_approve'
   | 'admin.guilda_reject'
   | 'admin.content_edit'
+  // Lições (conteúdo)
+  | 'licao.publicada'
+  | 'licao.despublicada'
   // Guilda
   | 'guilda.apply'
   | 'guilda.approved'
