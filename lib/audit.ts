@@ -40,7 +40,11 @@ export type AuditAction =
   | 'mailbox.letter_sent'
   | 'mailbox.letter_responded'
   | 'mailbox.letter_auto_responded'
-  | 'mailbox.letter_expired';
+  | 'mailbox.letter_expired'
+  // Diário de desenvolvimento
+  | 'diario.criada'
+  | 'diario.editada'
+  | 'diario.apagada';
 
 interface AuditEntry {
   userId?: string;
