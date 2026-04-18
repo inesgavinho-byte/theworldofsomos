@@ -19,6 +19,26 @@ interface JarroDesbloqueado {
   intro_erasmo?: string;
 }
 
+interface RespostaCompleta {
+  ok: true;
+  ja_completou: boolean;
+  estrelas_ganhas: number;
+  total_apos: number | null;
+  momento_entregue: boolean;
+  jarros: JarroDesbloqueado[];
+}
+
+function respostaJaCompletou(): RespostaCompleta {
+  return {
+    ok: true,
+    ja_completou: true,
+    estrelas_ganhas: 0,
+    total_apos: null,
+    momento_entregue: false,
+    jarros: [],
+  };
+}
+
 export async function POST(req: Request): Promise<NextResponse> {
   const auth = await autenticarCrianca();
   if (!auth.ok) return auth.response;
@@ -56,24 +76,64 @@ export async function POST(req: Request): Promise<NextResponse> {
   const admin = createAdminClient();
   const criancaId = auth.data.criancaId;
 
-  // Esta lição já foi concluída antes (tem momento entregue)?
+  // ── Gate 1 (leitura): short-circuit se já há narrativa para este par. ──
   const { data: conclusoesAnteriores } = await admin
     .from("sessoes")
     .select("id")
     .eq("crianca_id", criancaId)
     .eq("licao_id", licao_id)
-    .not("momento_entregue_em", "is", null)
+    .eq("tipo", "narrativa")
     .limit(1);
 
-  const jaCompletou = (conclusoesAnteriores?.length ?? 0) > 0;
+  if ((conclusoesAnteriores?.length ?? 0) > 0) {
+    return NextResponse.json(respostaJaCompletou());
+  }
 
-  // Regra de estrelas: 1 por acerto + bónus de 1 se 100%.
-  const acertos = Math.max(0, Math.min(correctos, total));
-  const estrelasGanhas = jaCompletou
-    ? 0
-    : acertos + (total > 0 && acertos === total ? 1 : 0);
+  // ── Gate 2 (escrita atómica): inserimos a linha narrativa PRIMEIRO.  ──
+  // Serve de lock: a unique index parcial sessoes_conclusao_unica_idx
+  // (crianca_id, licao_id) where tipo='narrativa' garante que apenas
+  // um insert passa, mesmo com dois POSTs simultâneos.
+  const tempoTotalMs =
+    typeof tempo_total_ms === "number" ? Math.max(0, Math.floor(tempo_total_ms)) : null;
 
-  // Registar reflexão (linha separada) mesmo que opcional.
+  const { error: lockErr } = await admin.from("sessoes").insert({
+    crianca_id: criancaId,
+    licao_id,
+    slug_licao: slug ?? null,
+    titulo_licao: titulo ?? null,
+    tipo: "narrativa",
+    momento_historico: momento?.momento_historico ?? null,
+    momento_crianca: momento?.para_crianca ?? null,
+    momento_adulto: momento?.para_adulto ?? null,
+    momento_entregue_em: new Date().toISOString(),
+    tempo_ms: tempoTotalMs,
+  });
+
+  if (lockErr) {
+    // 23505 = unique_violation → outro POST ganhou a corrida. Tratar como já concluiu.
+    const pgCode = (lockErr as { code?: string }).code;
+    if (pgCode === "23505") {
+      return NextResponse.json(respostaJaCompletou());
+    }
+    console.error("[licao/completa] falha a adquirir lock narrativa:", lockErr);
+    return NextResponse.json({ erro: "Erro ao concluir lição" }, { status: 500 });
+  }
+
+  // ── A partir daqui, somos o único processo a concluir esta lição. ──
+  const momentoEntregue = Boolean(momento?.para_crianca);
+
+  if (momentoEntregue) {
+    await log({
+      userId: auth.data.userId,
+      action: "licao.momento_entregue",
+      entityType: "licao",
+      entityId: licao_id,
+      metadata: { crianca_id: criancaId, slug: slug ?? null },
+      request: req,
+    });
+  }
+
+  // Reflexão — opcional, mas agora com a certeza de uma única execução.
   if (reflexao_emocao || reflexao_texto) {
     await admin.from("sessoes").insert({
       crianca_id: criancaId,
@@ -83,8 +143,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       tipo: "reflexao",
       reflexao_emocao: reflexao_emocao ?? null,
       reflexao_texto: reflexao_texto ?? null,
-      tempo_ms:
-        typeof tempo_total_ms === "number" ? Math.max(0, Math.floor(tempo_total_ms)) : null,
+      tempo_ms: tempoTotalMs,
     });
 
     await log({
@@ -101,32 +160,10 @@ export async function POST(req: Request): Promise<NextResponse> {
     });
   }
 
-  // Entregar Momento apenas na primeira vez.
-  const momentoEntregue = !jaCompletou && Boolean(momento?.para_crianca);
-  if (momentoEntregue) {
-    await admin.from("sessoes").insert({
-      crianca_id: criancaId,
-      licao_id,
-      slug_licao: slug ?? null,
-      titulo_licao: titulo ?? null,
-      tipo: "narrativa",
-      momento_historico: momento?.momento_historico ?? null,
-      momento_crianca: momento?.para_crianca ?? null,
-      momento_adulto: momento?.para_adulto ?? null,
-      momento_entregue_em: new Date().toISOString(),
-    });
+  // Regra de estrelas: 1 por acerto + bónus de 1 se 100%.
+  const acertos = Math.max(0, Math.min(correctos, total));
+  const estrelasGanhas = acertos + (total > 0 && acertos === total ? 1 : 0);
 
-    await log({
-      userId: auth.data.userId,
-      action: "licao.momento_entregue",
-      entityType: "licao",
-      entityId: licao_id,
-      metadata: { crianca_id: criancaId, slug: slug ?? null },
-      request: req,
-    });
-  }
-
-  // Actualizar estrelas_total atomicamente e desbloquear jarros se cruzou múltiplos de 25.
   const jarrosDesbloqueados: JarroDesbloqueado[] = [];
   let totalApos: number | null = null;
 
@@ -235,7 +272,6 @@ export async function POST(req: Request): Promise<NextResponse> {
         });
       }
 
-      // Actualizar contador jarros_abertos
       if (jarrosDesbloqueados.length > 0) {
         await admin
           .from("criancas")
@@ -256,17 +292,19 @@ export async function POST(req: Request): Promise<NextResponse> {
       acertos,
       total,
       tempo_total_ms: tempo_total_ms ?? null,
-      ja_completou: jaCompletou,
+      ja_completou: false,
     },
     request: req,
   });
 
-  return NextResponse.json({
+  const resposta: RespostaCompleta = {
     ok: true,
-    ja_completou: jaCompletou,
+    ja_completou: false,
     estrelas_ganhas: estrelasGanhas,
     total_apos: totalApos,
     momento_entregue: momentoEntregue,
     jarros: jarrosDesbloqueados,
-  });
+  };
+
+  return NextResponse.json(resposta);
 }
