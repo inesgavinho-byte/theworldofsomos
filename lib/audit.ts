@@ -15,6 +15,10 @@ export type AuditAction =
   | 'child.create'
   | 'child.update'
   | 'child.pin_set'
+  | 'child.pin_login_success'
+  | 'child.pin_login_failed'
+  | 'child.pin_lockout'
+  | 'child.pin_rate_limited'
   | 'child.data_reset'
   // Sessões e progresso
   | 'session.complete'

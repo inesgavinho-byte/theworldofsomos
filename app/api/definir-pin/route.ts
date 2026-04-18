@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { log } from "@/lib/audit";
+import { clearFailuresForIp, ipFromRequest } from "@/lib/pin-rate-limit";
 
 export async function POST(req: Request): Promise<NextResponse> {
   try {
@@ -48,6 +49,10 @@ export async function POST(req: Request): Promise<NextResponse> {
     const admin = createAdminClient();
     const pinEmail = `pin_${pin}@somos.app`;
     const pinHash = await bcrypt.hash(pin, 10);
+
+    // Ao (re)configurar o PIN, o adulto desbloqueia o próprio dispositivo:
+    // limpa tentativas falhadas registadas neste IP.
+    await clearFailuresForIp(ipFromRequest(req));
 
     if (crianca.user_id) {
       // Update existing auth user: change email + password to match new PIN
