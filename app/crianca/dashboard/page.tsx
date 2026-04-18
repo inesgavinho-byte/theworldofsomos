@@ -26,6 +26,7 @@ export default async function CriancaDashboardPage() {
 
   // Fetch pending AI exercise challenges sent by the parent
   let desafiosPendentes: any[] = [];
+  let diagnosticoPendente = false;
   if (crianca?.id) {
     const { data } = await supabase
       .from("desafios_familia")
@@ -35,6 +36,14 @@ export default async function CriancaDashboardPage() {
       .eq("estado", "pendente")
       .order("created_at", { ascending: false });
     desafiosPendentes = data ?? [];
+
+    // Diagnóstico pendente: nenhum diagnóstico concluído ainda.
+    const { count } = await supabase
+      .from("diagnosticos")
+      .select("id", { count: "exact", head: true })
+      .eq("crianca_id", crianca.id)
+      .eq("estado", "concluido");
+    diagnosticoPendente = (count ?? 0) === 0;
   }
 
   return (
@@ -42,6 +51,7 @@ export default async function CriancaDashboardPage() {
       profile={profile}
       crianca={crianca}
       desafiosPendentes={desafiosPendentes}
+      diagnosticoPendente={diagnosticoPendente}
     />
   );
 }

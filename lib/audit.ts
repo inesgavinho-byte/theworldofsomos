@@ -62,7 +62,12 @@ export type AuditAction =
   // Diário de desenvolvimento
   | 'diario.criada'
   | 'diario.editada'
-  | 'diario.apagada';
+  | 'diario.apagada'
+  // Diagnóstico curricular
+  | 'diagnostico.iniciado'
+  | 'diagnostico.exercicio_respondido'
+  | 'diagnostico.concluido'
+  | 'diagnostico.abandonado';
 
 interface AuditEntry {
   userId?: string;
