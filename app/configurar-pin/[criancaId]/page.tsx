@@ -102,7 +102,7 @@ export default function ConfigurarPinPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.erro ?? "Erro ao guardar o PIN.");
+        setError(json.erro ?? "Não foi possível guardar o PIN. Tenta outra vez.");
         setConfirmDigits(["", "", "", ""]);
         setStep("entrada");
         setPinDigits(["", "", "", ""]);
@@ -111,7 +111,7 @@ export default function ConfigurarPinPage() {
         setStep("sucesso");
       }
     } catch {
-      setError("Erro de ligação. Tenta de novo.");
+      setError("Não foi possível guardar o PIN. Tenta outra vez.");
     } finally {
       setLoading(false);
     }
