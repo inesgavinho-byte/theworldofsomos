@@ -48,6 +48,7 @@ export default function CriancaDashboardClient({ profile, crianca, desafiosPende
   const router = useRouter();
   const nome = crianca?.nome ?? profile?.nome ?? "Explorador";
   const streak = 7;
+  const estrelasTotal = Number(crianca?.estrelas_total ?? 0);
 
   const handleLogout = async () => {
     // Fix 10: usar API route para apagar cookie somos-context no logout
@@ -164,7 +165,7 @@ export default function CriancaDashboardClient({ profile, crianca, desafiosPende
           }}
         >
           {[
-            { label: "Estrelas", valor: "47", cor: "#facc15" },
+            { label: "Estrelas", valor: String(estrelasTotal), cor: "#facc15" },
             { label: "Lições", valor: "12", cor: "#4ade80" },
             { label: "Semanas", valor: "3", cor: "#a78bfa" },
           ].map((stat) => (
@@ -629,7 +630,7 @@ export default function CriancaDashboardClient({ profile, crianca, desafiosPende
             </div>
             <div>
               <p style={{ fontSize: "22px", fontWeight: 900, color: "#facc15" }}>
-                47 estrelas
+                {estrelasTotal} estrelas
               </p>
               <p style={{ fontSize: "12px", opacity: 0.5 }}>
                 Continua a explorar
