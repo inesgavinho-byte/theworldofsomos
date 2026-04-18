@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getDimensaoBySlug } from "@/lib/dimensoes";
-import { getLicaoBySlug } from "@/lib/licoes";
+import { DIMENSOES, getDimensaoBySlug } from "@/lib/dimensoes";
+import {
+  getLicaoCompleta,
+  normalizarDimensao,
+  type LicaoCompleta,
+} from "@/lib/licoes/supabase";
 import { editorial } from "@/lib/tom";
 import { createClient } from "@/lib/supabase/client";
 import { Suspense } from "react";
@@ -66,8 +70,12 @@ interface PageProps {
 function ReflexaoContent({ slug }: { slug: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const dim = getDimensaoBySlug(slug);
-  const licao = getLicaoBySlug(slug);
+
+  const [licao, setLicao] = useState<LicaoCompleta | null>(null);
+
+  const dim = licao
+    ? DIMENSOES[normalizarDimensao(licao.dimensao)]
+    : getDimensaoBySlug(slug);
 
   const respostasStr = searchParams.get("respostas") ?? "";
   const estrelasTotal = parseInt(searchParams.get("estrelas") ?? "0");
@@ -84,34 +92,76 @@ function ReflexaoContent({ slug }: { slug: string }) {
   const [momentoLoading, setMomentoLoading] = useState(true);
 
   useEffect(() => {
+    let cancelado = false;
+    getLicaoCompleta(slug).then((l) => {
+      if (!cancelado) setLicao(l);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, [slug]);
+
+  useEffect(() => {
+    if (!licao) return;
+
+    // Se a lição já tem momento curado na BD, usa-o directamente.
+    const momentoBD = licao.momento?.crianca;
+    if (momentoBD?.texto) {
+      const adaptado: Momento = {
+        momento_historico: momentoBD.data ?? momentoBD.titulo ?? "",
+        para_crianca: momentoBD.texto,
+        para_adulto:
+          licao.momento?.adulto?.resumo_aprendizagem ??
+          licao.momento?.adulto?.sugestao ??
+          "",
+      };
+      setMomento(adaptado);
+      setMomentoLoading(false);
+      try {
+        sessionStorage.setItem(`momento_${slug}`, JSON.stringify(adaptado));
+      } catch {
+        // sessionStorage indisponível — ecrã do Momento renderiza sem armazenamento.
+      }
+      return;
+    }
+
+    let cancelado = false;
     async function fetchMomento() {
       try {
         const res = await fetch("/api/momento", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            titulo_licao: licao?.titulo ?? slug,
-            tema: licao?.subtitulo ?? slug,
-            dimensao: licao?.dimensao ?? dim.nome,
+            titulo_licao: licao!.titulo,
+            tema: licao!.subtitulo ?? licao!.titulo,
+            dimensao: licao!.dimensao,
           }),
         });
         const json = await res.json();
+        if (cancelado) return;
         if (json.sucesso && json.momento) {
           setMomento(json.momento);
           try {
             sessionStorage.setItem(`momento_${slug}`, JSON.stringify(json.momento));
           } catch {
-            // sessionStorage not available — the momento page will handle gracefully
+            // sessionStorage indisponível — continuamos sem armazenar.
           }
         }
       } catch {
-        // Silently fail — the block simply won't render
+        // Falha silenciosa — o bloco simplesmente não renderiza.
       } finally {
-        setMomentoLoading(false);
+        if (!cancelado) setMomentoLoading(false);
       }
     }
     fetchMomento();
-  }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      cancelado = true;
+    };
+  }, [slug, licao]);
+
+  const promptReflexao =
+    licao?.reflexao?.prompts?.[0] ?? "O que aprendeste hoje?";
+  const introReflexao = licao?.reflexao?.introducao ?? null;
 
   const handleGuardar = async () => {
     setGuardado(true);
@@ -419,7 +469,7 @@ function ReflexaoContent({ slug }: { slug: string }) {
               marginBottom: "4px",
             }}
           >
-            O que aprendeste hoje?
+            {promptReflexao}
           </p>
           <p
             style={{
@@ -429,7 +479,7 @@ function ReflexaoContent({ slug }: { slug: string }) {
               marginBottom: "12px",
             }}
           >
-            Escreve uma coisa, por pequena que seja.
+            {introReflexao ?? "Escreve uma coisa, por pequena que seja."}
           </p>
           <textarea
             value={reflexao}
