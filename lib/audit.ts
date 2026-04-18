@@ -32,6 +32,7 @@ export type AuditAction =
   // Lições (conteúdo)
   | 'licao.publicada'
   | 'licao.despublicada'
+  | 'licao.editada'
   // Guilda
   | 'guilda.apply'
   | 'guilda.approved'
