@@ -40,6 +40,7 @@ export type AuditAction =
   // Lições (conteúdo)
   | 'licao.publicada'
   | 'licao.despublicada'
+  | 'licao.editada'
   // Exercícios (conteúdo)
   | 'exercicio.criado'
   | 'exercicio.editado'
