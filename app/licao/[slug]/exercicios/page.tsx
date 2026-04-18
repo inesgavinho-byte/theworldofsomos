@@ -70,6 +70,10 @@ export default function ExerciciosPage({ params }: PageProps) {
   const [respostas, setRespostas] = useState<boolean[]>([]);
   const [estrelas, setEstrelas] = useState(0);
   const [fraseFeedback, setFraseFeedback] = useState<string>('');
+  // Instrumentação: marcamos início da lição uma única vez e medimos tempos
+  const [inicioLicao, setInicioLicao] = useState<number | null>(null);
+  const [inicioQuestao, setInicioQuestao] = useState<number>(0);
+  const [licaoIniciadaLogada, setLicaoIniciadaLogada] = useState(false);
 
   useEffect(() => {
     let cancelado = false;
@@ -90,6 +94,22 @@ export default function ExerciciosPage({ params }: PageProps) {
       cancelado = true;
     };
   }, [slug]);
+
+  // Regista licao.iniciada no primeiro render com lição válida
+  useEffect(() => {
+    if (!licao || licaoIniciadaLogada) return;
+    const agora = Date.now();
+    setInicioLicao(agora);
+    setInicioQuestao(agora);
+    setLicaoIniciadaLogada(true);
+    fetch("/api/licao/iniciada", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, licao_id: licao.id }),
+    }).catch(() => {
+      // Não bloqueia o fluxo da criança.
+    });
+  }, [licao, slug, licaoIniciadaLogada]);
 
   const dim = licao
     ? DIMENSOES[normalizarDimensao(licao.dimensao)]
@@ -182,12 +202,29 @@ export default function ExerciciosPage({ params }: PageProps) {
   }
 
   const confirmar = () => {
-    if (selecionada === null) return;
+    if (selecionada === null || !exercicio || !licao) return;
     setConfirmada(true);
     setFraseFeedback(feedbackCrianca(correta));
     if (correta) {
       setEstrelas((e) => e + 1);
     }
+
+    const tempoMs = Math.max(0, Date.now() - inicioQuestao);
+    fetch("/api/licao/responder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        licao_id: licao.id,
+        exercicio_id: exercicio.id,
+        slug,
+        titulo: licao.titulo,
+        resposta: { opcao: selecionada },
+        correcto: correta,
+        tempo_ms: tempoMs,
+      }),
+    }).catch(() => {
+      // Não bloqueia — a criança continua a lição.
+    });
   };
 
   const avancar = () => {
@@ -199,11 +236,15 @@ export default function ExerciciosPage({ params }: PageProps) {
       setSelecionada(null);
       setConfirmada(false);
       setFraseFeedback('');
+      setInicioQuestao(Date.now());
     } else {
       // Done — go to reflexao
+      const tempoTotal =
+        inicioLicao !== null ? Math.max(0, Date.now() - inicioLicao) : 0;
       const params = new URLSearchParams({
         respostas: novasRespostas.map((r) => (r ? "1" : "0")).join(""),
         estrelas: String(estrelas + (correta ? 1 : 0)),
+        tempo_total: String(tempoTotal),
       });
       router.push(`/licao/${slug}/reflexao?${params}`);
     }

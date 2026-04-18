@@ -20,6 +20,14 @@ export type AuditAction =
   | 'session.complete'
   | 'session.momento_generated'
   | 'session.jarro_unlock'
+  // Fluxo de lição (Fase 0.3 — rastreio do percurso da criança)
+  | 'licao.iniciada'
+  | 'licao.exercicio_respondido'
+  | 'licao.reflexao_completa'
+  | 'licao.momento_entregue'
+  | 'licao.concluida'
+  | 'estrelas.ganhas'
+  | 'jarro.desbloqueado'
   // IA
   | 'ai.book_upload'
   | 'ai.exercises_generated'

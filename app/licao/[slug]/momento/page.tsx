@@ -10,6 +10,15 @@ interface Momento {
   para_adulto: string;
 }
 
+interface Jarro {
+  numero: number;
+  facto_id: number | null;
+  facto: string | null;
+  categoria: string | null;
+  eh_primeiro: boolean;
+  intro_erasmo?: string;
+}
+
 interface PageProps {
   params: { slug: string };
 }
@@ -20,16 +29,26 @@ export default function MomentoPage({ params }: PageProps) {
   const dim = getDimensaoBySlug(slug);
 
   const [momento, setMomento] = useState<Momento | null>(null);
-  const [pandora, setPandora] = useState<string | null>(null);
+  const [jarros, setJarros] = useState<Jarro[]>([]);
   const [visible, setVisible] = useState(false);
+  const [jaCompletou, setJaCompletou] = useState(false);
 
   useEffect(() => {
     try {
       const stored = sessionStorage.getItem(`momento_${slug}`);
       if (stored) setMomento(JSON.parse(stored));
 
-      const pandoraMsg = sessionStorage.getItem(`pandora_${slug}`);
-      if (pandoraMsg) setPandora(pandoraMsg);
+      const jarrosStored = sessionStorage.getItem(`jarros_${slug}`);
+      if (jarrosStored) {
+        const parsed = JSON.parse(jarrosStored);
+        if (Array.isArray(parsed)) setJarros(parsed);
+      }
+
+      const conclusaoStored = sessionStorage.getItem(`conclusao_${slug}`);
+      if (conclusaoStored) {
+        const parsed = JSON.parse(conclusaoStored);
+        setJaCompletou(Boolean(parsed?.ja_completou));
+      }
     } catch {
       // sessionStorage not available
     }
@@ -184,18 +203,21 @@ export default function MomentoPage({ params }: PageProps) {
               fontSize: "28px",
               fontStyle: "italic",
               fontWeight: 400,
-              color: "rgba(255,255,255,0.5)",
+              color: "rgba(255,255,255,0.55)",
               textAlign: "center",
               marginBottom: "36px",
             }}
           >
-            O teu momento está a ser procurado na história…
+            {jaCompletou
+              ? "Já abriste este Momento antes. Continua a explorar."
+              : "O teu momento está a ser procurado na história…"}
           </p>
         )}
 
-        {/* Jarro de Pandora — only if unlocked this session */}
-        {pandora && (
+        {/* Jarros de Pandora — um por um, em sequência */}
+        {jarros.map((jarro, i) => (
           <div
+            key={`${jarro.numero}-${i}`}
             style={{
               marginTop: "52px",
               padding: "28px 24px",
@@ -205,7 +227,9 @@ export default function MomentoPage({ params }: PageProps) {
               textAlign: "center",
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0)" : "translateY(16px)",
-              transition: "opacity 0.9s ease 0.4s, transform 0.9s ease 0.4s",
+              transition: `opacity 0.9s ease ${0.4 + i * 0.2}s, transform 0.9s ease ${
+                0.4 + i * 0.2
+              }s`,
             }}
           >
             <p
@@ -218,22 +242,58 @@ export default function MomentoPage({ params }: PageProps) {
                 marginBottom: "16px",
               }}
             >
-              Jarro de Pandora
+              {jarro.eh_primeiro ? "O teu primeiro jarro" : "Abriste um jarro"}
             </p>
-            <p
-              className="font-editorial"
-              style={{
-                fontSize: "22px",
-                fontStyle: "italic",
-                fontWeight: 400,
-                lineHeight: 1.6,
-                color: "rgba(255,255,255,0.85)",
-              }}
-            >
-              {pandora}
-            </p>
+
+            {jarro.intro_erasmo && (
+              <p
+                className="font-editorial"
+                style={{
+                  fontSize: "16px",
+                  fontStyle: "italic",
+                  fontWeight: 400,
+                  lineHeight: 1.7,
+                  color: "rgba(255,255,255,0.7)",
+                  marginBottom: "22px",
+                  whiteSpace: "pre-line",
+                  textAlign: "left",
+                }}
+              >
+                {jarro.intro_erasmo}
+              </p>
+            )}
+
+            {jarro.categoria && (
+              <p
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 800,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: `${dim.cor}60`,
+                  marginBottom: "10px",
+                }}
+              >
+                {jarro.categoria}
+              </p>
+            )}
+
+            {jarro.facto && (
+              <p
+                className="font-editorial"
+                style={{
+                  fontSize: "22px",
+                  fontStyle: "italic",
+                  fontWeight: 400,
+                  lineHeight: 1.6,
+                  color: "rgba(255,255,255,0.92)",
+                }}
+              >
+                {jarro.facto}
+              </p>
+            )}
           </div>
-        )}
+        ))}
 
         {/* Final CTA */}
         <div style={{ marginTop: "64px", display: "flex", justifyContent: "center" }}>

@@ -9,7 +9,6 @@ import {
   type LicaoCompleta,
 } from "@/lib/licoes/supabase";
 import { editorial } from "@/lib/tom";
-import { createClient } from "@/lib/supabase/client";
 import { Suspense } from "react";
 
 const EMOCOES = [
@@ -79,6 +78,7 @@ function ReflexaoContent({ slug }: { slug: string }) {
 
   const respostasStr = searchParams.get("respostas") ?? "";
   const estrelasTotal = parseInt(searchParams.get("estrelas") ?? "0");
+  const tempoTotalMs = parseInt(searchParams.get("tempo_total") ?? "0");
 
   const respostas = respostasStr.split("").map((c) => c === "1");
   const certas = respostas.filter(Boolean).length;
@@ -164,34 +164,53 @@ function ReflexaoContent({ slug }: { slug: string }) {
   const introReflexao = licao?.reflexao?.introducao ?? null;
 
   const handleGuardar = async () => {
+    if (!licao) return;
     setGuardado(true);
 
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const res = await fetch("/api/licao/completa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          licao_id: licao.id,
+          slug,
+          titulo: licao.titulo,
+          correctos: certas,
+          total,
+          tempo_total_ms: tempoTotalMs || null,
+          reflexao_emocao: emocaoSelecionada,
+          reflexao_texto: reflexao.trim() ? reflexao.trim() : null,
+          momento: momento ?? null,
+        }),
+      });
 
-      if (user) {
-        const { data: crianca } = await supabase
-          .from("criancas")
-          .select("id")
-          .eq("user_id", user.id)
-          .single();
-
-        if (crianca) {
-          await supabase.from("sessoes").insert({
-            crianca_id: crianca.id,
-            slug_licao: slug,
-            titulo_licao: licao?.titulo ?? slug,
-            reflexao_emocao: emocaoSelecionada,
-            reflexao_texto: reflexao || null,
-            momento_historico: momento?.momento_historico ?? null,
-            momento_crianca: momento?.para_crianca ?? null,
-            momento_adulto: momento?.para_adulto ?? null,
-          });
+      if (res.ok) {
+        const json = await res.json();
+        try {
+          if (json.momento_entregue && momento) {
+            sessionStorage.setItem(`momento_${slug}`, JSON.stringify(momento));
+          } else {
+            sessionStorage.removeItem(`momento_${slug}`);
+          }
+          if (Array.isArray(json.jarros) && json.jarros.length > 0) {
+            sessionStorage.setItem(`jarros_${slug}`, JSON.stringify(json.jarros));
+          } else {
+            sessionStorage.removeItem(`jarros_${slug}`);
+          }
+          sessionStorage.setItem(
+            `conclusao_${slug}`,
+            JSON.stringify({
+              ja_completou: json.ja_completou,
+              estrelas_ganhas: json.estrelas_ganhas,
+              total_apos: json.total_apos,
+            }),
+          );
+        } catch {
+          // sessionStorage pode não estar disponível — seguimos na mesma.
         }
       }
     } catch {
-      // Non-blocking — navigate regardless
+      // Non-blocking — navegar à mesma.
     }
 
     setTimeout(() => {
