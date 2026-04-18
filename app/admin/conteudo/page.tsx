@@ -301,6 +301,10 @@ export default function AdminConteudoPage() {
                     </button>
                     <Link href={`/admin/licoes/${licao.id}/editar`} style={{ flexShrink: 0 }}>
                       <span style={{ fontSize: "12px", color: "var(--texto-secundario)", fontWeight: 700 }}>Editar</span>
+                    <Link href={`/admin/licoes/${licao.id}/exercicios`} style={{ flexShrink: 0 }}>
+                      <span style={{ fontSize: "12px", color: "var(--roxo-texto)", fontWeight: 700 }}>
+                        Gerir exercícios →
+                      </span>
                     </Link>
                     <Link href={`/licao/${licao.slug}`} style={{ flexShrink: 0 }}>
                       <span style={{ fontSize: "12px", color: "var(--roxo-texto)", fontWeight: 700 }}>Ver →</span>

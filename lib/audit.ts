@@ -20,6 +20,14 @@ export type AuditAction =
   | 'session.complete'
   | 'session.momento_generated'
   | 'session.jarro_unlock'
+  // Fluxo de lição (Fase 0.3 — rastreio do percurso da criança)
+  | 'licao.iniciada'
+  | 'licao.exercicio_respondido'
+  | 'licao.reflexao_completa'
+  | 'licao.momento_entregue'
+  | 'licao.concluida'
+  | 'estrelas.ganhas'
+  | 'jarro.desbloqueado'
   // IA
   | 'ai.book_upload'
   | 'ai.exercises_generated'
@@ -33,6 +41,11 @@ export type AuditAction =
   | 'licao.publicada'
   | 'licao.despublicada'
   | 'licao.editada'
+  // Exercícios (conteúdo)
+  | 'exercicio.criado'
+  | 'exercicio.editado'
+  | 'exercicio.apagado'
+  | 'exercicio.reordenado'
   // Guilda
   | 'guilda.apply'
   | 'guilda.approved'
@@ -41,7 +54,11 @@ export type AuditAction =
   | 'mailbox.letter_sent'
   | 'mailbox.letter_responded'
   | 'mailbox.letter_auto_responded'
-  | 'mailbox.letter_expired';
+  | 'mailbox.letter_expired'
+  // Diário de desenvolvimento
+  | 'diario.criada'
+  | 'diario.editada'
+  | 'diario.apagada';
 
 interface AuditEntry {
   userId?: string;
