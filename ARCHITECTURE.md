@@ -255,8 +255,8 @@ idioma              TEXT    -- 'pt-PT' | 'pt-BR' | 'en' | 'fr'
 
 ## Convenções de Código
 
-- Lições novas → adicionar ao Supabase **e** ao array `LICOES_INFO` em `app/licao/[slug]/page.tsx`
-- Conteúdo de lições → `lib/licoes/[slug].ts` — nunca hardcoded em componentes
+- Lições novas → inserir na tabela `licoes` do Supabase (fonte canónica); frontend lê via `lib/licoes/supabase.ts`
+- Conteúdo de lições → colunas `narrativa`, `descricao`, `conteudo`, `reflexao`, `momento`, `perguntas_porta` em `licoes`; exercícios em `exercicios.conteudo` com `licao_id` — nunca hardcoded em componentes
 - Dimensões → sempre lowercase sem acentos: `identitaria`, `naturalista`, `logica`, `artistica`, `social`
 - Currículos → sempre: `PT`, `BNCC`, `Cambridge`, `IB`, `FR`
 - Rotas públicas → declarar em `PUBLIC_PREFIXES` no `middleware.ts`
