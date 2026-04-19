@@ -84,7 +84,7 @@ export default async function ProgressoCriancaPage({ params }: PageProps) {
       .eq("tipo", "forte"),
   ]);
 
-  const porCompetencia = new Map<string, (typeof progresso)[number]>();
+  const porCompetencia = new Map<string, NonNullable<typeof progresso>[number]>();
   (progresso ?? []).forEach((p) => porCompetencia.set(p.competencia_id, p));
 
   const mapa: MapaCompetencia[] = (competencias ?? []).map((c) => {
