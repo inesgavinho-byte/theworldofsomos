@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect, notFound } from "next/navigation";
 import ProgressoClient, { type MapaCompetencia } from "./ProgressoClient";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: { id: string };
 }
@@ -23,7 +25,6 @@ export default async function ProgressoCriancaPage({ params }: PageProps) {
 
   if (!crianca) notFound();
 
-  // Acesso: própria criança ou membro da família.
   let autorizado = crianca.user_id === user.id;
   if (!autorizado) {
     const { data: membro } = await admin
@@ -50,30 +51,38 @@ export default async function ProgressoCriancaPage({ params }: PageProps) {
   const curriculo = crianca.curriculo ?? "PT";
   const anoEscolar = crianca.ano_escolar ?? "4";
 
-  const [{ data: competencias }, { data: progresso }, { data: diagnosticos }] =
-    await Promise.all([
-      admin
-        .from("competencias")
-        .select("id, area, dominio, ordem_dominio, codigo_oficial, descricao")
-        .eq("curriculo", curriculo)
-        .eq("ano_escolar", anoEscolar)
-        .eq("tipo", "curricular")
-        .order("area")
-        .order("ordem_dominio")
-        .order("codigo_oficial"),
-      admin
-        .from("progresso")
-        .select(
-          "competencia_id, nivel_actual, acertos, tentativas, estado, ultima_tentativa_em",
-        )
-        .eq("crianca_id", crianca.id),
-      admin
-        .from("diagnosticos")
-        .select("id, tipo, estado, iniciado_em, concluido_em, competencias_avaliadas")
-        .eq("crianca_id", crianca.id)
-        .order("iniciado_em", { ascending: false })
-        .limit(3),
-    ]);
+  const [
+    { data: competencias },
+    { data: progresso },
+    { data: diagnosticos },
+    { data: ligacoesFortes },
+  ] = await Promise.all([
+    admin
+      .from("competencias")
+      .select("id, area, dominio, ordem_dominio, codigo_oficial, descricao")
+      .eq("curriculo", curriculo)
+      .eq("ano_escolar", anoEscolar)
+      .eq("tipo", "curricular")
+      .order("area")
+      .order("ordem_dominio")
+      .order("codigo_oficial"),
+    admin
+      .from("progresso")
+      .select(
+        "competencia_id, nivel_actual, acertos, tentativas, estado, ultima_tentativa_em",
+      )
+      .eq("crianca_id", crianca.id),
+    admin
+      .from("diagnosticos")
+      .select("id, tipo, estado, iniciado_em, concluido_em, competencias_avaliadas")
+      .eq("crianca_id", crianca.id)
+      .order("iniciado_em", { ascending: false })
+      .limit(3),
+    admin
+      .from("competencia_pre_requisitos")
+      .select("competencia_id, pre_requisito_id")
+      .eq("tipo", "forte"),
+  ]);
 
   const porCompetencia = new Map<string, (typeof progresso)[number]>();
   (progresso ?? []).forEach((p) => porCompetencia.set(p.competencia_id, p));
@@ -95,6 +104,16 @@ export default async function ProgressoCriancaPage({ params }: PageProps) {
     };
   });
 
+  const lacunasMap: Record<string, number> = {};
+  (ligacoesFortes ?? []).forEach((row) => {
+    const pr = porCompetencia.get(row.pre_requisito_id);
+    const pendente =
+      !pr || (pr.nivel_actual ?? 0) < 3 || pr.estado === "nao_avaliada";
+    if (pendente) {
+      lacunasMap[row.competencia_id] = (lacunasMap[row.competencia_id] ?? 0) + 1;
+    }
+  });
+
   const ultimoDiagnostico =
     (diagnosticos ?? []).find((d) => d.estado === "concluido") ??
     (diagnosticos ?? [])[0] ??
@@ -111,6 +130,7 @@ export default async function ProgressoCriancaPage({ params }: PageProps) {
       }}
       mapa={mapa}
       ultimoDiagnostico={ultimoDiagnostico}
+      lacunasMap={lacunasMap}
     />
   );
 }

@@ -26,6 +26,20 @@ interface Diagnostico {
   competencias_avaliadas: number;
 }
 
+interface PassoPlano {
+  passo: number;
+  competencia_id: string;
+  codigo_oficial: string | null;
+  area: string | null;
+  dominio: string | null;
+  descricao: string | null;
+  ano_escolar: string | null;
+  nivel_actual: number;
+  estado: string;
+  bloqueador: boolean;
+  tipo_ligacao: string;
+}
+
 interface Props {
   crianca: {
     id: string;
@@ -36,6 +50,7 @@ interface Props {
   };
   mapa: MapaCompetencia[];
   ultimoDiagnostico: Diagnostico | null;
+  lacunasMap: Record<string, number>;
 }
 
 const NIVEL_COR: Record<number, { bg: string; border: string; texto: string; label: string }> = {
@@ -115,7 +130,21 @@ function formatData(iso: string | null): string {
   return `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-export default function ProgressoClient({ crianca, mapa, ultimoDiagnostico }: Props) {
+function rotuloNivel(nivel: number, estado: string): string {
+  if (estado === "nao_avaliada" && nivel === 0) return "ainda não";
+  if (nivel === 0) return "a começar";
+  if (nivel === 1) return "a iniciar";
+  if (nivel === 2) return "a progredir";
+  if (nivel === 3) return "consolidado";
+  return "dominado";
+}
+
+export default function ProgressoClient({
+  crianca,
+  mapa,
+  ultimoDiagnostico,
+  lacunasMap,
+}: Props) {
   const idade = idadeDe(crianca.dataNascimento);
 
   const resumo = useMemo(() => {
@@ -151,6 +180,11 @@ export default function ProgressoClient({ crianca, mapa, ultimoDiagnostico }: Pr
     return prioridade;
   }, [mapa]);
 
+  const totalLacunas = useMemo(
+    () => mapa.filter((c) => (lacunasMap[c.id] ?? 0) > 0).length,
+    [mapa, lacunasMap],
+  );
+
   const [areasAbertas, setAreasAbertas] = useState<Set<string>>(
     () => new Set(Array.from(porArea.keys())),
   );
@@ -166,6 +200,11 @@ export default function ProgressoClient({ crianca, mapa, ultimoDiagnostico }: Pr
 
   const [aPedir, setAPedir] = useState(false);
   const [pedidoMensagem, setPedidoMensagem] = useState<string | null>(null);
+
+  const [alvoSeleccionado, setAlvoSeleccionado] = useState<MapaCompetencia | null>(null);
+  const [plano, setPlano] = useState<PassoPlano[] | null>(null);
+  const [planoLoading, setPlanoLoading] = useState(false);
+  const [planoErro, setPlanoErro] = useState<string | null>(null);
 
   const pedirNovoDiagnostico = async () => {
     setAPedir(true);
@@ -192,6 +231,32 @@ export default function ProgressoClient({ crianca, mapa, ultimoDiagnostico }: Pr
       setAPedir(false);
     }
   };
+
+  async function abrirPlano(c: MapaCompetencia) {
+    setAlvoSeleccionado(c);
+    setPlano(null);
+    setPlanoErro(null);
+    setPlanoLoading(true);
+    try {
+      const res = await fetch(`/api/crianca/${crianca.id}/plano/${c.id}`);
+      const body = await res.json();
+      if (!res.ok) {
+        setPlanoErro(body.erro ?? "Não foi possível obter o plano.");
+      } else {
+        setPlano(body.passos ?? []);
+      }
+    } catch {
+      setPlanoErro("Sem ligação. Tenta novamente.");
+    } finally {
+      setPlanoLoading(false);
+    }
+  }
+
+  function fecharPainel() {
+    setAlvoSeleccionado(null);
+    setPlano(null);
+    setPlanoErro(null);
+  }
 
   return (
     <div
@@ -287,6 +352,19 @@ export default function ProgressoClient({ crianca, mapa, ultimoDiagnostico }: Pr
             ) : null}{" "}
             e <strong>{resumo.naoAvaliada} por avaliar</strong> (total: {resumo.total}).
           </p>
+          {totalLacunas > 0 && (
+            <p
+              style={{
+                fontSize: "13px",
+                color: "#b54a30",
+                fontWeight: 700,
+                marginTop: "12px",
+              }}
+            >
+              {totalLacunas} {totalLacunas === 1 ? "competência tem" : "competências têm"} lacunas
+              de base — clica num cartão marcado para ver o plano de consolidação.
+            </p>
+          )}
         </section>
 
         <section style={{ marginBottom: "32px" }}>
@@ -426,19 +504,53 @@ export default function ProgressoClient({ crianca, mapa, ultimoDiagnostico }: Pr
                         >
                           {comps.map((c) => {
                             const nivelCor = NIVEL_COR[c.nivel] ?? NIVEL_COR[0];
+                            const lacunas = lacunasMap[c.id] ?? 0;
                             const tooltip = `Nível ${c.nivel} · ${ESTADO_LABEL[c.estado] ?? c.estado} · ${c.tentativas} ${c.tentativas === 1 ? "tentativa" : "tentativas"}`;
                             return (
-                              <div
+                              <button
                                 key={c.id}
+                                onClick={() => abrirPlano(c)}
                                 title={tooltip}
                                 style={{
+                                  position: "relative",
+                                  textAlign: "left",
                                   background: nivelCor.bg,
                                   border: `1.5px solid ${nivelCor.border}`,
                                   borderRadius: "12px",
                                   padding: "10px 12px",
-                                  cursor: "help",
+                                  cursor: "none",
+                                  fontFamily: "inherit",
                                 }}
                               >
+                                {lacunas > 0 && (
+                                  <span
+                                    aria-label="Base em falta"
+                                    title={`Depende de ${lacunas} competência${lacunas > 1 ? "s" : ""} por consolidar.`}
+                                    style={{
+                                      position: "absolute",
+                                      top: "8px",
+                                      right: "8px",
+                                      width: "22px",
+                                      height: "22px",
+                                      borderRadius: "50%",
+                                      background: "rgba(239,129,109,0.25)",
+                                      border: "1px solid rgba(239,129,109,0.6)",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+                                      <path
+                                        d="M5 1v8M2 6l3 3 3-3"
+                                        stroke="#b54a30"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                  </span>
+                                )}
                                 {c.codigo_oficial && (
                                   <p
                                     style={{
@@ -458,11 +570,12 @@ export default function ProgressoClient({ crianca, mapa, ultimoDiagnostico }: Pr
                                     fontWeight: 600,
                                     color: "var(--texto-principal)",
                                     lineHeight: 1.4,
+                                    paddingRight: lacunas > 0 ? "22px" : 0,
                                   }}
                                 >
                                   {c.descricao ?? "—"}
                                 </p>
-                              </div>
+                              </button>
                             );
                           })}
                         </div>
@@ -640,6 +753,316 @@ export default function ProgressoClient({ crianca, mapa, ultimoDiagnostico }: Pr
           )}
         </section>
       </div>
+
+      {alvoSeleccionado && (
+        <PainelPlano
+          crianca={{ nome: crianca.nome, ano_escolar: crianca.anoEscolar }}
+          alvo={alvoSeleccionado}
+          passos={plano}
+          loading={planoLoading}
+          erro={planoErro}
+          onClose={fecharPainel}
+        />
+      )}
     </div>
+  );
+}
+
+function PainelPlano({
+  crianca,
+  alvo,
+  passos,
+  loading,
+  erro,
+  onClose,
+}: {
+  crianca: { nome: string | null; ano_escolar: string | null };
+  alvo: MapaCompetencia;
+  passos: PassoPlano[] | null;
+  loading: boolean;
+  erro: string | null;
+  onClose: () => void;
+}) {
+  const temBase = (passos ?? []).some((p) => p.tipo_ligacao !== "alvo");
+  const nomeCrianca = crianca.nome ?? "a criança";
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(23,19,16,0.35)",
+        zIndex: 50,
+        display: "flex",
+        justifyContent: "flex-end",
+      }}
+    >
+      <aside
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "min(480px, 92vw)",
+          background: "var(--fundo-pai)",
+          padding: "28px 24px 32px",
+          overflowY: "auto",
+          boxShadow: "-8px 0 24px rgba(0,0,0,0.12)",
+          fontFamily: "Nunito, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "start",
+            marginBottom: "16px",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "var(--texto-secundario)",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Plano de consolidação
+            </p>
+            <h2
+              className="font-editorial"
+              style={{
+                fontSize: "20px",
+                fontWeight: 500,
+                color: "var(--texto-principal)",
+                marginTop: "4px",
+              }}
+            >
+              {alvo.descricao ?? alvo.area ?? "Competência"}
+            </h2>
+            <p
+              style={{
+                fontSize: "12px",
+                color: "var(--texto-secundario)",
+                fontWeight: 700,
+                marginTop: "4px",
+                letterSpacing: "0.04em",
+              }}
+            >
+              {alvo.codigo_oficial}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Fechar"
+            style={{
+              background: "transparent",
+              border: "none",
+              fontSize: "22px",
+              color: "var(--texto-secundario)",
+              cursor: "none",
+              padding: "0 4px",
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {loading && (
+          <p style={{ fontSize: "13px", color: "var(--texto-secundario)" }}>A carregar...</p>
+        )}
+
+        {erro && (
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#b54a30",
+              background: "rgba(239,129,109,0.12)",
+              padding: "12px",
+              borderRadius: "10px",
+            }}
+          >
+            {erro}
+          </p>
+        )}
+
+        {!loading && !erro && passos && (
+          <>
+            <p
+              style={{
+                fontSize: "13px",
+                color: "var(--texto-secundario)",
+                lineHeight: 1.55,
+                marginBottom: "20px",
+                fontWeight: 600,
+              }}
+            >
+              {temBase
+                ? `Para a ${nomeCrianca} avançar em ${alvo.descricao ?? "esta competência"}, sugerimos trabalhar estas competências por esta ordem. As primeiras são bases do ano anterior que ainda precisam de consolidação.`
+                : `A ${nomeCrianca} já tem as bases consolidadas. Pode trabalhar directamente em ${alvo.descricao ?? "esta competência"}.`}
+            </p>
+
+            <ol
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+                padding: 0,
+                listStyle: "none",
+              }}
+            >
+              {passos.map((p) => (
+                <CartaoPasso
+                  key={p.competencia_id}
+                  passo={p}
+                  anoCrianca={crianca.ano_escolar}
+                />
+              ))}
+            </ol>
+
+            <button
+              style={{
+                marginTop: "24px",
+                width: "100%",
+                padding: "12px",
+                borderRadius: "12px",
+                background: "rgba(96,165,250,0.14)",
+                border: "1.5px solid rgba(96,165,250,0.45)",
+                color: "#185fa5",
+                fontSize: "13px",
+                fontWeight: 800,
+                cursor: "none",
+                fontFamily: "Nunito, sans-serif",
+              }}
+              onClick={() =>
+                alert("Em breve — exercícios em preparação.")
+              }
+            >
+              Começar pelo passo 1 →
+            </button>
+          </>
+        )}
+      </aside>
+    </div>
+  );
+}
+
+function CartaoPasso({
+  passo,
+  anoCrianca,
+}: {
+  passo: PassoPlano;
+  anoCrianca: string | null;
+}) {
+  const nivel = passo.nivel_actual ?? 0;
+  const ehBase =
+    anoCrianca && passo.ano_escolar && parseInt(passo.ano_escolar, 10) < parseInt(anoCrianca, 10);
+  const nivelCor = NIVEL_COR[nivel] ?? NIVEL_COR[0];
+  return (
+    <li
+      style={{
+        background: "rgba(245,242,236,0.8)",
+        border: `1.5px solid ${passo.bloqueador ? "rgba(239,129,109,0.55)" : "rgba(160,144,128,0.25)"}`,
+        borderRadius: "14px",
+        padding: "14px",
+        display: "flex",
+        gap: "12px",
+      }}
+    >
+      <div
+        style={{
+          width: "28px",
+          height: "28px",
+          borderRadius: "50%",
+          background: "rgba(160,144,128,0.18)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "13px",
+          fontWeight: 800,
+          color: "var(--texto-principal)",
+          flexShrink: 0,
+        }}
+      >
+        {passo.passo}
+      </div>
+      <div style={{ flex: 1 }}>
+        <p
+          style={{
+            fontSize: "11px",
+            fontWeight: 700,
+            color: "var(--texto-secundario)",
+            letterSpacing: "0.04em",
+            marginBottom: "2px",
+          }}
+        >
+          {passo.codigo_oficial}
+          {passo.area && ` · ${passo.area}`}
+          {passo.dominio && ` · ${passo.dominio}`}
+        </p>
+        <p
+          style={{
+            fontSize: "13px",
+            fontWeight: 700,
+            color: "var(--texto-principal)",
+            lineHeight: 1.4,
+            marginBottom: "8px",
+          }}
+        >
+          {passo.descricao}
+        </p>
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+          <span
+            style={{
+              fontSize: "10px",
+              fontWeight: 800,
+              padding: "3px 9px",
+              borderRadius: "10px",
+              background: nivelCor.bg,
+              border: `1px solid ${nivelCor.border}`,
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+              color: "var(--texto-principal)",
+            }}
+          >
+            {rotuloNivel(nivel, passo.estado)}
+          </span>
+          {ehBase && (
+            <span
+              style={{
+                fontSize: "10px",
+                fontWeight: 800,
+                padding: "3px 9px",
+                borderRadius: "10px",
+                background: "rgba(167,139,250,0.18)",
+                border: "1px solid rgba(167,139,250,0.45)",
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                color: "#534ab7",
+              }}
+            >
+              base
+            </span>
+          )}
+          {passo.bloqueador && (
+            <span
+              style={{
+                fontSize: "10px",
+                fontWeight: 800,
+                padding: "3px 9px",
+                borderRadius: "10px",
+                background: "rgba(239,129,109,0.2)",
+                border: "1px solid rgba(239,129,109,0.55)",
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                color: "#b54a30",
+              }}
+            >
+              bloqueador
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
   );
 }

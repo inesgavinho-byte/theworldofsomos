@@ -67,7 +67,9 @@ export type AuditAction =
   | 'diagnostico.iniciado'
   | 'diagnostico.exercicio_respondido'
   | 'diagnostico.concluido'
-  | 'diagnostico.abandonado';
+  | 'diagnostico.abandonado'
+  // Plano de consolidação (rede de pré-requisitos)
+  | 'plano.consultado';
 
 interface AuditEntry {
   userId?: string;

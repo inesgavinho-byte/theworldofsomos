@@ -301,6 +301,7 @@ export default function AdminConteudoPage() {
                     </button>
                     <Link href={`/admin/licoes/${licao.id}/editar`} style={{ flexShrink: 0 }}>
                       <span style={{ fontSize: "12px", color: "var(--texto-secundario)", fontWeight: 700 }}>Editar</span>
+                    </Link>
                     <Link href={`/admin/licoes/${licao.id}/exercicios`} style={{ flexShrink: 0 }}>
                       <span style={{ fontSize: "12px", color: "var(--roxo-texto)", fontWeight: 700 }}>
                         Gerir exercícios →
