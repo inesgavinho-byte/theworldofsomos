@@ -167,7 +167,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       const factosDados = new Set(
         (jarrosExistentes ?? []).map((j) => j.facto_id).filter((x): x is number => x !== null),
       );
-      const maiorNumero = Math.max(0, ...numerosAbertos);
+      const maiorNumero = Math.max(0, ...Array.from(numerosAbertos));
 
       // Cada múltiplo de 25 ainda não aberto dispara um jarro
       const alvos: number[] = [];
