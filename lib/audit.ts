@@ -63,6 +63,11 @@ export type AuditAction =
   | 'diario.criada'
   | 'diario.editada'
   | 'diario.apagada'
+  // Diagnóstico curricular
+  | 'diagnostico.iniciado'
+  | 'diagnostico.exercicio_respondido'
+  | 'diagnostico.concluido'
+  | 'diagnostico.abandonado'
   // Plano de consolidação (rede de pré-requisitos)
   | 'plano.consultado';
 
