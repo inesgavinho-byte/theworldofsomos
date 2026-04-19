@@ -3,108 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getDimensaoBySlug, SLUG_DIMENSAO } from "@/lib/dimensoes";
+import { DIMENSOES, getDimensaoBySlug, SLUG_DIMENSAO } from "@/lib/dimensoes";
+import {
+  getExerciciosDaLicao,
+  getLicaoCompleta,
+  normalizarDimensao,
+  type LicaoCompleta,
+} from "@/lib/licoes/supabase";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type DimKey = "identitaria" | "naturalista" | "logica" | "artistica" | "social";
-
-// ─── Static data ──────────────────────────────────────────────────────────────
-
-const LICOES_INFO: Record<string, { titulo: string; descricao: string; duracao: string; questoes: number }> = {
-  "floresta-tropical": {
-    titulo: "A Floresta Tropical",
-    descricao: "Mergulha no ecossistema mais rico do planeta. Descobre como as espécies cooperam, competem e sobrevivem neste labirinto de vida.",
-    duracao: "15",
-    questoes: 5,
-  },
-  "cerebro-incrivel": {
-    titulo: "O Cérebro Incrível",
-    descricao: "O teu cérebro é a estrutura mais complexa do universo conhecido. Vamos descobrir como ele aprende, sente e cria.",
-    duracao: "12",
-    questoes: 5,
-  },
-  "sistema-solar": {
-    titulo: "O Sistema Solar",
-    descricao: "Da rocha ígnea ao gás gigante — o nosso sistema solar é um lugar de extremos. Vamos explorar os seus oito planetas e os segredos que guardam.",
-    duracao: "14",
-    questoes: 5,
-  },
-  "a-zona-certa": {
-    titulo: "A Zona Certa",
-    descricao: "Existe um espaço entre o demasiado fácil e o demasiado difícil onde a aprendizagem realmente acontece. Onde está a tua zona certa?",
-    duracao: "10",
-    questoes: 5,
-  },
-  "cerebro-desafios": {
-    titulo: "O Cérebro e os Desafios",
-    descricao: "Por que é que o teu cérebro cresce quando enfrenta obstáculos? A neurociência por detrás da resiliência e do crescimento.",
-    duracao: "11",
-    questoes: 5,
-  },
-  "o-proposito": {
-    titulo: "O Propósito",
-    descricao: "Para que estou aqui? Uma das questões mais profundas da humanidade, explorada com olhos curiosos e coração aberto.",
-    duracao: "13",
-    questoes: 5,
-  },
-  "como-aprender": {
-    titulo: "Como Aprender",
-    descricao: "Há estratégias de aprendizagem que funcionam e outras que não. Descobre as técnicas que os melhores estudantes do mundo usam.",
-    duracao: "12",
-    questoes: 5,
-  },
-  // Lições universais
-  "as-emocoes-sao-dados": {
-    titulo: "As Emoções são Dados",
-    descricao: "As emoções não são fraqueza — são informação. Quando sentes medo, o teu corpo está a dizer-te algo. Descobre o sistema de navegação interno que todos temos.",
-    duracao: "10",
-    questoes: 5,
-  },
-  "errar-e-parte-do-mapa": {
-    titulo: "Errar é Parte do Mapa",
-    descricao: "Nenhum explorador chegou a um lugar novo sem se perder pelo caminho. O erro não é o oposto do sucesso — é o caminho para ele.",
-    duracao: "10",
-    questoes: 5,
-  },
-  "o-planeta-e-a-nossa-casa": {
-    titulo: "O Planeta é a Nossa Casa",
-    descricao: "Não existe endereço mais preciso do que este: Terra, Sistema Solar, Via Láctea. Esta é a nossa casa. O que acontece quando não cuidamos dela?",
-    duracao: "10",
-    questoes: 5,
-  },
-  // Novas lições — 3.º/4.º ano PT
-  "palavras-que-voam": {
-    titulo: "As Palavras que Voam",
-    descricao: "Uma criança descobre que as palavras têm superpotências diferentes — algumas descrevem, outras mostram acção, outras ainda ligam ideias. Adjectivos, verbos e conjunções ganham vida numa aventura de linguagem.",
-    duracao: "12 min",
-    questoes: 5,
-  },
-  "o-mapa-dos-numeros": {
-    titulo: "O Mapa dos Números",
-    descricao: "Uma exploradora encontra um mapa antigo cheio de números misteriosos. Para desvendar os segredos do mapa, tem de perceber padrões, multiplicações e divisões simples.",
-    duracao: "14 min",
-    questoes: 5,
-  },
-  "a-vida-secreta-das-plantas": {
-    titulo: "A Vida Secreta das Plantas",
-    descricao: "Uma criança descobre que as plantas respiram de forma diferente dos animais. De dia fazem fotossíntese, de noite respiram. Explora as partes da planta e o ciclo da água.",
-    duracao: "13 min",
-    questoes: 5,
-  },
-  "a-aventura-em-ingles": {
-    titulo: "The Big Adventure",
-    descricao: "Um robot chamado Beep chega a Portugal e não fala português. Ajuda-o a aprender palavras essenciais do dia-a-dia — cores, animais, acções e estados emocionais.",
-    duracao: "11 min",
-    questoes: 5,
-  },
-  "os-descobrimentos": {
-    titulo: "Os Descobrimentos",
-    descricao: "Portugal, pequeno país na ponta da Europa, teve uma ideia enorme: e se atravessássemos o oceano? A história das caravelas, de Vasco da Gama e do que os portugueses encontraram.",
-    duracao: "15 min",
-    questoes: 5,
-  },
-};
 
 const DIM_BG: Record<DimKey, string> = {
   identitaria: "#0d0b1a",
@@ -472,25 +381,49 @@ interface PageProps {
 export default function LicaoCapaPage({ params }: PageProps) {
   const { slug } = params;
   const router = useRouter();
-  const dim = getDimensaoBySlug(slug);
-  const dimKey = (SLUG_DIMENSAO[slug] ?? "identitaria") as DimKey;
 
-  const info = LICOES_INFO[slug] ?? {
-    titulo: slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-    descricao: "Uma lição especial para descobrires algo novo sobre o mundo.",
-    duracao: "10",
-    questoes: 5,
-  };
+  const [licao, setLicao] = useState<LicaoCompleta | null>(null);
+  const [numExercicios, setNumExercicios] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelado = false;
+    async function carregar() {
+      const l = await getLicaoCompleta(slug);
+      if (cancelado || !l) return;
+      setLicao(l);
+      const exs = await getExerciciosDaLicao(l.id);
+      if (cancelado) return;
+      setNumExercicios(exs.length);
+    }
+    carregar();
+    return () => {
+      cancelado = true;
+    };
+  }, [slug]);
+
+  const dimKey: DimKey = licao
+    ? normalizarDimensao(licao.dimensao)
+    : (SLUG_DIMENSAO[slug] ?? "identitaria");
+  const dimConfig = licao ? DIMENSOES[dimKey] : getDimensaoBySlug(slug);
+  const corLicao = licao?.cor ?? dimConfig.cor;
+
+  const titulo =
+    licao?.titulo ??
+    slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const descricao = licao?.descricao ?? null;
+  const narrativa = licao?.narrativa ?? null;
+  const duracaoMin = licao?.duracao_min ?? null;
 
   const bg = DIM_BG[dimKey];
-  const cor = dim.cor;
+  const cor = corLicao;
   const btnTextColor = BTN_TEXT_COLOR[dimKey];
 
-  // Pick random mantra once on mount
-  const [mantra] = useState(() => {
+  // Frase poética: narrativa da BD se existir; senão mantra aleatório por dimensão.
+  const [mantraFallback] = useState(() => {
     const list = MANTRAS[dimKey];
     return list[Math.floor(Math.random() * list.length)];
   });
+  const fraseTopo = narrativa ?? mantraFallback;
 
   // Check reduced motion
   const reducedMotion =
@@ -601,7 +534,7 @@ export default function LicaoCapaPage({ params }: PageProps) {
           }}
         >
           <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: cor }} />
-          {dim.nome}
+          {dimConfig.nome}
         </div>
 
         {/* Mantra */}
@@ -618,7 +551,7 @@ export default function LicaoCapaPage({ params }: PageProps) {
             lineHeight: 1.5,
           }}
         >
-          {mantra}
+          {fraseTopo}
         </p>
 
         {/* Icon */}
@@ -636,14 +569,14 @@ export default function LicaoCapaPage({ params }: PageProps) {
 
         {/* Title */}
         {dimKey === "artistica" ? (
-          <TypewriterTitle text={info.titulo} color={cor} />
+          <TypewriterTitle text={titulo} color={cor} />
         ) : dimKey === "identitaria" ? (
           // Letter-by-letter
           <h1
             className="font-editorial"
             style={{ fontSize: "40px", fontWeight: 500, color: "white", lineHeight: 1.1, marginBottom: "16px" }}
           >
-            {info.titulo.split("").map((char, i) => (
+            {titulo.split("").map((char, i) => (
               <span
                 key={i}
                 className="cover-letter"
@@ -670,7 +603,7 @@ export default function LicaoCapaPage({ params }: PageProps) {
               animationDelay: "1100ms, 1100ms",
             }}
           >
-            {info.titulo}
+            {titulo}
           </h1>
         ) : (
           // Default: fade in (naturalista, logica)
@@ -687,55 +620,63 @@ export default function LicaoCapaPage({ params }: PageProps) {
               animationDelay: "1100ms",
             }}
           >
-            {info.titulo}
+            {titulo}
           </h1>
         )}
 
-        {/* Description */}
-        <p
-          style={{
-            fontSize: "15px",
-            color: "rgba(255,255,255,0.6)",
-            fontWeight: 600,
-            lineHeight: 1.6,
-            marginBottom: "32px",
-            opacity: 0,
-            animation: "coverFadeIn 0.5s ease both",
-            animationDelay: "1400ms",
-          }}
-        >
-          {info.descricao}
-        </p>
+        {/* Description — só renderiza se a BD tiver descricao */}
+        {descricao && (
+          <p
+            style={{
+              fontSize: "15px",
+              color: "rgba(255,255,255,0.6)",
+              fontWeight: 600,
+              lineHeight: 1.6,
+              marginBottom: "32px",
+              opacity: 0,
+              animation: "coverFadeIn 0.5s ease both",
+              animationDelay: "1400ms",
+            }}
+          >
+            {descricao}
+          </p>
+        )}
 
-        {/* Meta stats */}
-        <div
-          style={{
-            display: "flex",
-            gap: "16px",
-            marginBottom: "32px",
-            opacity: 0,
-            animation: "coverFadeIn 0.5s ease both",
-            animationDelay: "1400ms",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: "rgba(255,255,255,0.5)" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M12 7V12L15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            {dimKey === "logica"
-              ? <><CountStat target={parseInt(info.duracao)} suffix=" min" delay={1400} /></>
-              : `${info.duracao} min`}
+        {/* Meta stats — só renderiza as métricas conhecidas */}
+        {(duracaoMin !== null || (numExercicios !== null && numExercicios > 0)) && (
+          <div
+            style={{
+              display: "flex",
+              gap: "16px",
+              marginBottom: "32px",
+              opacity: 0,
+              animation: "coverFadeIn 0.5s ease both",
+              animationDelay: "1400ms",
+            }}
+          >
+            {duracaoMin !== null && (
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: "rgba(255,255,255,0.5)" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M12 7V12L15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                {dimKey === "logica"
+                  ? <><CountStat target={duracaoMin} suffix=" min" delay={1400} /></>
+                  : `${duracaoMin} min`}
+              </div>
+            )}
+            {numExercicios !== null && numExercicios > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: "rgba(255,255,255,0.5)" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L14.09 8.26L20.82 8.27L15.45 12.14L17.54 18.4L12 14.53L6.46 18.4L8.55 12.14L3.18 8.27L9.91 8.26L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                </svg>
+                {dimKey === "logica"
+                  ? <><CountStat target={numExercicios} suffix=" questões" delay={1500} /></>
+                  : `${numExercicios} questões`}
+              </div>
+            )}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: "rgba(255,255,255,0.5)" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L14.09 8.26L20.82 8.27L15.45 12.14L17.54 18.4L12 14.53L6.46 18.4L8.55 12.14L3.18 8.27L9.91 8.26L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-            </svg>
-            {dimKey === "logica"
-              ? <><CountStat target={info.questoes} suffix=" questões" delay={1500} /></>
-              : `${info.questoes} questões`}
-          </div>
-        </div>
+        )}
 
         {/* CTA button */}
         <div

@@ -1,490 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getDimensaoBySlug } from "@/lib/dimensoes";
+import { DIMENSOES, getDimensaoBySlug } from "@/lib/dimensoes";
+import {
+  getExerciciosDaLicao,
+  getLicaoCompleta,
+  normalizarDimensao,
+  type ExercicioParaUI,
+  type LicaoCompleta,
+} from "@/lib/licoes/supabase";
 import { feedbackCrianca } from "@/lib/tom";
 
-const EXERCICIOS_POR_SLUG: Record<string, { pergunta: string; opcoes: string[]; correta: number; explicacao: string }[]> = {
-  "floresta-tropical": [
-    {
-      pergunta: "Qual é a camada mais alta da floresta tropical?",
-      opcoes: ["Sub-bosque", "Dossel", "Emergente", "Chão da floresta"],
-      correta: 2,
-      explicacao: "A camada emergente é a mais alta, onde as árvores mais altas se destacam acima do dossel.",
-    },
-    {
-      pergunta: "Porque é que as florestas tropicais têm tanta biodiversidade?",
-      opcoes: [
-        "Por causa do frio",
-        "Pela abundância de luz e chuva durante o ano",
-        "Por terem poucos predadores",
-        "Por estarem longe do mar",
-      ],
-      correta: 1,
-      explicacao: "O calor constante e a chuva abundante criam condições perfeitas para muitas espécies diferentes.",
-    },
-    {
-      pergunta: "O que é a fotossíntese?",
-      opcoes: [
-        "Como as plantas bebem água",
-        "Como as plantas dormem",
-        "Como as plantas produzem energia a partir da luz",
-        "Como as plantas se reproduzem",
-      ],
-      correta: 2,
-      explicacao: "A fotossíntese é o processo pelo qual as plantas convertem luz solar em energia química (açúcares).",
-    },
-    {
-      pergunta: "Qual é o papel das árvores no ciclo da água?",
-      opcoes: [
-        "Absorvem e libertam água para a atmosfera",
-        "Bloqueiam a chuva",
-        "Secam o solo",
-        "Não têm nenhum papel",
-      ],
-      correta: 0,
-      explicacao: "As árvores absorvem água pelas raízes e libertam-na pelas folhas — um processo chamado transpiração.",
-    },
-    {
-      pergunta: "O que significa 'endémico' quando falamos de uma espécie?",
-      opcoes: [
-        "Que é perigosa",
-        "Que existe em todo o mundo",
-        "Que só existe numa região específica",
-        "Que está extinta",
-      ],
-      correta: 2,
-      explicacao: "Uma espécie endémica só existe naturalmente numa região geográfica específica.",
-    },
-  ],
-  "palavras-que-voam": [
-    {
-      pergunta: "O gato ___ rapidamente pela janela.",
-      opcoes: ["saltou", "amarelo", "bonito", "mas"],
-      correta: 0,
-      explicacao: "'Saltou' é um verbo — indica uma acção. As outras palavras são adjectivos ou conjunções.",
-    },
-    {
-      pergunta: "Qual destas palavras descreve como alguém é?",
-      opcoes: ["feliz", "correr", "e", "casa"],
-      correta: 0,
-      explicacao: "'Feliz' é um adjectivo — descreve uma qualidade ou estado de alguém.",
-    },
-    {
-      pergunta: "A Maria ___ a sua amiga porque ela estava triste.",
-      opcoes: ["abraçou", "grande", "porém", "azul"],
-      correta: 0,
-      explicacao: "'Abraçou' é um verbo que descreve uma acção concreta que a Maria fez.",
-    },
-    {
-      pergunta: "Qual é o adjectivo nesta frase: 'O céu está limpo'?",
-      opcoes: ["limpo", "céu", "está", "o"],
-      correta: 0,
-      explicacao: "'Limpo' é o adjectivo — descreve como está o céu.",
-    },
-    {
-      pergunta: "Liga duas ideias: 'Gosto de ler ___ também gosto de desenhar.'",
-      opcoes: ["e", "corri", "bonito", "porta"],
-      correta: 0,
-      explicacao: "'E' é uma conjunção — serve para ligar duas ideias ou frases.",
-    },
-  ],
-  "o-mapa-dos-numeros": [
-    {
-      pergunta: "Qual é o resultado de 7 × 8?",
-      opcoes: ["56", "54", "63", "48"],
-      correta: 0,
-      explicacao: "7 × 8 = 56. Podes pensar: 7 × 8 = 7 × 4 × 2 = 28 × 2 = 56.",
-    },
-    {
-      pergunta: "Se tens 36 rebuçados e divides por 4 amigos, quantos fica cada um?",
-      opcoes: ["9", "8", "7", "12"],
-      correta: 0,
-      explicacao: "36 ÷ 4 = 9. Cada amigo fica com 9 rebuçados.",
-    },
-    {
-      pergunta: "Qual é o número que falta? 5, 10, 15, ___, 25",
-      opcoes: ["20", "18", "22", "19"],
-      correta: 0,
-      explicacao: "O padrão é +5 a cada passo. Depois de 15 vem 20, depois 25.",
-    },
-    {
-      pergunta: "Uma caixa tem 6 filas com 9 ovos cada. Quantos ovos no total?",
-      opcoes: ["54", "45", "63", "48"],
-      correta: 0,
-      explicacao: "6 × 9 = 54. Multiplicar é somar grupos iguais — 6 grupos de 9.",
-    },
-    {
-      pergunta: "Qual é metade de 84?",
-      opcoes: ["42", "44", "40", "46"],
-      correta: 0,
-      explicacao: "84 ÷ 2 = 42. Metade é dividir por 2.",
-    },
-  ],
-  "a-vida-secreta-das-plantas": [
-    {
-      pergunta: "O que é que as plantas precisam para fazer fotossíntese?",
-      opcoes: ["luz solar", "vento", "terra", "frio"],
-      correta: 0,
-      explicacao: "As plantas precisam de luz solar (e água e CO₂) para produzir energia através da fotossíntese.",
-    },
-    {
-      pergunta: "Qual parte da planta absorve água do solo?",
-      opcoes: ["raiz", "folha", "flor", "caule"],
-      correta: 0,
-      explicacao: "As raízes absorvem água e minerais do solo e enviam-nos para o resto da planta.",
-    },
-    {
-      pergunta: "O que libertam as plantas durante o dia?",
-      opcoes: ["oxigénio", "dióxido de carbono", "azoto", "vapor"],
-      correta: 0,
-      explicacao: "Durante o dia, as plantas fazem fotossíntese e libertam oxigénio — o ar que respiramos!",
-    },
-    {
-      pergunta: "Como se chama o processo em que a água dos rios sobe para as nuvens?",
-      opcoes: ["evaporação", "fotossíntese", "respiração", "germinação"],
-      correta: 0,
-      explicacao: "A evaporação é quando a água líquida se transforma em vapor e sobe para a atmosfera.",
-    },
-    {
-      pergunta: "Onde fica guardada a energia que a planta produz?",
-      opcoes: ["fruto e folhas", "flores", "raízes", "casca"],
-      correta: 0,
-      explicacao: "A energia produzida pela fotossíntese fica armazenada sob a forma de açúcares nas folhas e frutos.",
-    },
-  ],
-  "a-aventura-em-ingles": [
-    {
-      pergunta: "Como se diz 'gato' em inglês?",
-      opcoes: ["cat", "dog", "bird", "fish"],
-      correta: 0,
-      explicacao: "'Cat' significa gato em inglês. 'Dog' é cão, 'bird' é pássaro, 'fish' é peixe.",
-    },
-    {
-      pergunta: "What colour is the sun?",
-      opcoes: ["yellow", "blue", "green", "red"],
-      correta: 0,
-      explicacao: "The sun is yellow! 'Yellow' em português é amarelo.",
-    },
-    {
-      pergunta: "Como se diz 'estou feliz' em inglês?",
-      opcoes: ["I am happy", "I am sad", "I am tired", "I am hungry"],
-      correta: 0,
-      explicacao: "'I am happy' = estou feliz. 'Sad' = triste, 'tired' = cansado, 'hungry' = com fome.",
-    },
-    {
-      pergunta: "Which word means 'correr'?",
-      opcoes: ["run", "jump", "swim", "fly"],
-      correta: 0,
-      explicacao: "'Run' significa correr. 'Jump' = saltar, 'swim' = nadar, 'fly' = voar.",
-    },
-    {
-      pergunta: "How many days are in a week?",
-      opcoes: ["7", "5", "6", "8"],
-      correta: 0,
-      explicacao: "There are 7 days in a week: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.",
-    },
-  ],
-  "os-descobrimentos": [
-    {
-      pergunta: "Como se chamavam os barcos usados pelos navegadores portugueses?",
-      opcoes: ["caravelas", "galeões", "fragatas", "barcaças"],
-      correta: 0,
-      explicacao: "As caravelas eram barcos rápidos e manobráveis, perfeitos para explorar os oceanos desconhecidos.",
-    },
-    {
-      pergunta: "Quem foi o primeiro navegador a chegar à Índia pelo mar?",
-      opcoes: ["Vasco da Gama", "Pedro Álvares Cabral", "Bartolomeu Dias", "Fernão de Magalhães"],
-      correta: 0,
-      explicacao: "Vasco da Gama chegou à Índia em 1498, abrindo a rota do Cabo — um feito histórico enorme.",
-    },
-    {
-      pergunta: "Em que século aconteceram os Descobrimentos portugueses?",
-      opcoes: ["século XV e XVI", "século XII", "século XVIII", "século X"],
-      correta: 0,
-      explicacao: "Os grandes Descobrimentos aconteceram principalmente entre 1400 e 1550, nos séculos XV e XVI.",
-    },
-    {
-      pergunta: "Que país foi descoberto por Pedro Álvares Cabral em 1500?",
-      opcoes: ["Brasil", "Angola", "Índia", "Moçambique"],
-      correta: 0,
-      explicacao: "Pedro Álvares Cabral chegou ao Brasil em abril de 1500, durante uma viagem para a Índia.",
-    },
-    {
-      pergunta: "Para que servia a bússola nos barcos?",
-      opcoes: ["indicar o norte", "medir o tempo", "ver as estrelas", "calcular distâncias"],
-      correta: 0,
-      explicacao: "A bússola aponta sempre para o norte magnético, ajudando os navegadores a saber a direcção.",
-    },
-  ],
-  "as-emocoes-sao-dados": [
-    {
-      pergunta: "Quando sentes medo antes de uma apresentação, o que o teu corpo está a tentar dizer?",
-      opcoes: [
-        "Que és fraco e não deves fazer a apresentação",
-        "Que a situação importa e deves estar atento",
-        "Que há perigo real e tens de fugir",
-        "Que estás doente e precisas de descanso",
-      ],
-      correta: 1,
-      explicacao: "O medo antes de uma apresentação é informação útil — indica que a situação te importa e que podes preparar-te melhor.",
-    },
-    {
-      pergunta: "Qual é a diferença entre uma emoção e um comportamento?",
-      opcoes: [
-        "São a mesma coisa — emoção e comportamento significam o mesmo",
-        "A emoção é o que fazes, o comportamento é o que sentes",
-        "A emoção é o que sentes dentro de ti, o comportamento é o que fazes",
-        "As emoções são sempre visíveis para os outros",
-      ],
-      correta: 2,
-      explicacao: "A emoção acontece dentro de nós — é a informação. O comportamento é a resposta que escolhemos dar a essa informação.",
-    },
-    {
-      pergunta: "A Ana está com raiva do irmão mas decide respirar fundo antes de responder. O que está a fazer?",
-      opcoes: [
-        "Fingir que não está com raiva",
-        "Separar a emoção do comportamento — sentiu a emoção mas escolheu como agir",
-        "Ignorar as suas emoções",
-        "Mostrar que não liga ao irmão",
-      ],
-      correta: 1,
-      explicacao: "A Ana reconheceu a raiva (emoção) mas escolheu respirar antes de agir (comportamento). Isso é inteligência emocional.",
-    },
-    {
-      pergunta: "Se uma pessoa chora ao ver um filme triste, o que é que isso nos diz?",
-      opcoes: [
-        "Que ela é fraca e não devia chorar",
-        "Que ela não gosta do filme",
-        "Que ela está doente",
-        "Que ela consegue sentir empatia e ligação com os outros",
-      ],
-      correta: 3,
-      explicacao: "Chorar ao ver algo triste mostra capacidade de empatia — conseguir sentir o que os outros sentem. Não é fraqueza, é informação.",
-    },
-    {
-      pergunta: "Porque é que reconhecer as nossas emoções é importante?",
-      opcoes: [
-        "Para as esconder melhor dos outros",
-        "Para não as sentir e parecer mais forte",
-        "Para as compreender e fazer escolhas melhores",
-        "Para sabermos que emoções são proibidas",
-      ],
-      correta: 2,
-      explicacao: "Quando reconhecemos o que sentimos, percebemos a mensagem da emoção e podemos fazer escolhas conscientes em vez de reagir automaticamente.",
-    },
-  ],
-  "errar-e-parte-do-mapa": [
-    {
-      pergunta: "O que é a 'mentalidade de crescimento' (growth mindset)?",
-      opcoes: [
-        "Acreditar que a inteligência é fixa — ou se tem ou não se tem",
-        "Nunca cometer erros e ser sempre o melhor",
-        "Acreditar que podemos crescer com esforço, prática e aprendizagem",
-        "Crescer fisicamente e ficar mais alto",
-      ],
-      correta: 2,
-      explicacao: "A mentalidade de crescimento é a crença de que as capacidades podem ser desenvolvidas com esforço, estratégia e aprendizagem.",
-    },
-    {
-      pergunta: "Quando cometes um erro numa tarefa, o que é mais útil fazer?",
-      opcoes: [
-        "Desistir imediatamente — provavelmente não és bom nisso",
-        "Culpar os outros pelo teu erro",
-        "Fingir que não aconteceu e seguir em frente",
-        "Perceber onde erraste, aprender com isso e tentar de novo",
-      ],
-      correta: 3,
-      explicacao: "O erro torna-se aprendizagem quando percebemos o que correu mal e ajustamos a nossa abordagem.",
-    },
-    {
-      pergunta: "Qual destas frases mostra uma mentalidade de crescimento?",
-      opcoes: [
-        "Não sou bom a matemática e nunca vou ser.",
-        "Ainda não consegui resolver isto, mas posso aprender.",
-        "Já nasci com talento — não preciso de esforçar-me.",
-        "Errar é uma vergonha e nunca devia acontecer.",
-      ],
-      correta: 1,
-      explicacao: "'Ainda não consegui' é a frase mais poderosa da mentalidade de crescimento. O 'ainda' muda tudo.",
-    },
-    {
-      pergunta: "O que acontece no teu cérebro quando erras e percebes porquê?",
-      opcoes: [
-        "O cérebro fica mais fraco e cansado",
-        "Nada — os erros não têm efeito no cérebro",
-        "O cérebro cria conexões novas — é quando mais estás a aprender",
-        "O cérebro apaga a informação errada",
-      ],
-      correta: 2,
-      explicacao: "É exactamente no momento em que erramos e compreendemos o porquê que o cérebro forma novas conexões neuronais.",
-    },
-    {
-      pergunta: "Qual é a diferença entre esforço e resultado?",
-      opcoes: [
-        "São exactamente a mesma coisa",
-        "O resultado é o único que importa — o esforço não conta",
-        "O esforço é o que controlas; o resultado pode depender de mais factores",
-        "O esforço é sempre visível para os outros",
-      ],
-      correta: 2,
-      explicacao: "Podemos controlar o esforço que colocamos, mas o resultado depende também de outros factores. Focar no esforço é mais produtivo.",
-    },
-  ],
-  "o-planeta-e-a-nossa-casa": [
-    {
-      pergunta: "Qual é o nome da camada de ar que envolve e protege a Terra?",
-      opcoes: [
-        "Hidrosfera",
-        "Litosfera",
-        "Atmosfera",
-        "Biosfera",
-      ],
-      correta: 2,
-      explicacao: "A atmosfera é a camada de gases que envolve a Terra, protegendo-a da radiação solar e mantendo a temperatura adequada para a vida.",
-    },
-    {
-      pergunta: "O que acontece quando muitas árvores são cortadas numa floresta?",
-      opcoes: [
-        "O ar fica melhor porque há mais espaço",
-        "Aparecem mais animais porque têm mais espaço para viver",
-        "Há menos absorção de CO₂, o solo perde nutrientes e a biodiversidade diminui",
-        "A chuva aumenta porque não há folhas para a bloquear",
-      ],
-      correta: 2,
-      explicacao: "As árvores absorvem CO₂, retêm o solo e fornecem habitat. Cortá-las em massa desequilibra todo o ecossistema.",
-    },
-    {
-      pergunta: "Qual destas acções ajuda o planeta no dia-a-dia?",
-      opcoes: [
-        "Deixar as luzes ligadas quando saímos do quarto",
-        "Comprar sempre coisas novas em vez de reparar as antigas",
-        "Separar o lixo para reciclar e usar menos plástico",
-        "Usar sempre o carro mesmo para distâncias curtas",
-      ],
-      correta: 2,
-      explicacao: "Reciclar e reduzir o plástico são escolhas diárias com impacto real — cada pequena acção conta quando repetida por muitas pessoas.",
-    },
-    {
-      pergunta: "O que é um ecossistema?",
-      opcoes: [
-        "Uma fábrica de energia renovável",
-        "Uma cidade planeada para ser sustentável",
-        "Um tipo especial de planta tropical",
-        "Uma comunidade de seres vivos que interagem entre si e com o seu ambiente",
-      ],
-      correta: 3,
-      explicacao: "Um ecossistema é um sistema formado por seres vivos e o ambiente onde vivem, em constante interacção e equilíbrio.",
-    },
-    {
-      pergunta: "Porque é que a Terra é chamada 'o planeta azul'?",
-      opcoes: [
-        "Porque tem muito frio e o gelo é azul",
-        "Porque tem tanta água que parece azul vista do espaço",
-        "Porque o céu é sempre azul em todo o planeta",
-        "Porque os cientistas escolheram azul como cor do planeta",
-      ],
-      correta: 1,
-      explicacao: "Cerca de 71% da superfície da Terra é coberta de água. Vista do espaço, essa água dá ao planeta a sua cor azul característica.",
-    },
-  ],
-  "sistema-solar": [
-    {
-      pergunta: "Qual é o planeta mais próximo do Sol?",
-      opcoes: ["Vénus", "Terra", "Mercúrio", "Marte"],
-      correta: 2,
-      explicacao: "Mercúrio é o planeta mais próximo do Sol, completando uma órbita em apenas 88 dias.",
-    },
-    {
-      pergunta: "O que é um ano-luz?",
-      opcoes: [
-        "Um ano com muito sol",
-        "A distância que a luz percorre num ano",
-        "Um tipo de estrela",
-        "Uma unidade de tempo",
-      ],
-      correta: 1,
-      explicacao: "Um ano-luz é a distância que a luz percorre num ano — cerca de 9,46 trilhões de quilómetros.",
-    },
-    {
-      pergunta: "Quantas luas tem Marte?",
-      opcoes: ["0", "1", "2", "4"],
-      correta: 2,
-      explicacao: "Marte tem duas luas: Fobos e Deimos, que são muito pequenas comparadas com a Lua da Terra.",
-    },
-    {
-      pergunta: "O que mantém os planetas em órbita?",
-      opcoes: ["O vento solar", "A gravidade do Sol", "A velocidade deles", "O campo magnético"],
-      correta: 1,
-      explicacao: "A gravidade do Sol puxa os planetas em direção a ele, enquanto a sua velocidade os mantém em órbita.",
-    },
-    {
-      pergunta: "Como se chama a galáxia onde vivemos?",
-      opcoes: ["Andrómeda", "Via Láctea", "Triangulum", "Whirlpool"],
-      correta: 1,
-      explicacao: "Vivemos na Via Láctea, uma galáxia espiral com mais de 200 mil milhões de estrelas.",
-    },
-  ],
-};
-
-// Default exercises for slugs not in the map
-const EXERCICIOS_PADRAO = [
-  {
-    pergunta: "O que é mais importante no processo de aprendizagem?",
-    opcoes: ["Memorizar tudo", "Tentar mesmo quando é difícil", "Nunca errar", "Copiar dos outros"],
-    correta: 1,
-    explicacao: "Tentar mesmo quando é difícil é o segredo da aprendizagem — o erro é parte do caminho.",
-  },
-  {
-    pergunta: "Qual é a melhor altura para estudar?",
-    opcoes: [
-      "Quando não há mais nada para fazer",
-      "Só antes dos testes",
-      "Um pouco todos os dias",
-      "O mais tarde possível",
-    ],
-    correta: 2,
-    explicacao: "Estudar um pouco todos os dias é muito mais eficaz do que estudar muito de uma vez.",
-  },
-  {
-    pergunta: "O que acontece ao teu cérebro quando aprendes algo novo?",
-    opcoes: [
-      "Fica mais cansado",
-      "Fica igual",
-      "Formam-se novas ligações entre neurónios",
-      "Fica mais pequeno",
-    ],
-    correta: 2,
-    explicacao: "Cada vez que aprendes algo, o teu cérebro cria novas conexões — é como um músculo que cresce!",
-  },
-  {
-    pergunta: "Porque é que dormir bem é importante para aprender?",
-    opcoes: [
-      "Não é importante",
-      "Durante o sono o cérebro consolida as memórias",
-      "Para ter energia para brincar",
-      "Para não ter fome",
-    ],
-    correta: 1,
-    explicacao: "Durante o sono, o cérebro processa e consolida tudo o que aprendeste durante o dia.",
-  },
-  {
-    pergunta: "O que significa ter uma 'mentalidade de crescimento'?",
-    opcoes: [
-      "Crescer fisicamente",
-      "Acreditar que as capacidades podem ser desenvolvidas com esforço",
-      "Ser muito alto",
-      "Ter muitos livros",
-    ],
-    correta: 1,
-    explicacao: "Uma mentalidade de crescimento é acreditar que podes melhorar com esforço e prática.",
-  },
-];
-
-function getExercicios(slug: string) {
-  return EXERCICIOS_POR_SLUG[slug] ?? EXERCICIOS_PADRAO;
-}
 
 // Character configurations per dimension
 const PERSONAGENS_POR_DIMENSAO: Record<string, Array<{ arquivo: string; video?: string }>> = {
@@ -532,8 +60,9 @@ interface PageProps {
 export default function ExerciciosPage({ params }: PageProps) {
   const { slug } = params;
   const router = useRouter();
-  const dim = getDimensaoBySlug(slug);
-  const exercicios = getExercicios(slug);
+
+  const [licao, setLicao] = useState<LicaoCompleta | null>(null);
+  const [exercicios, setExercicios] = useState<ExercicioParaUI[] | null>(null);
 
   const [atual, setAtual] = useState(0);
   const [selecionada, setSelecionada] = useState<number | null>(null);
@@ -541,20 +70,161 @@ export default function ExerciciosPage({ params }: PageProps) {
   const [respostas, setRespostas] = useState<boolean[]>([]);
   const [estrelas, setEstrelas] = useState(0);
   const [fraseFeedback, setFraseFeedback] = useState<string>('');
+  // Instrumentação: marcamos início da lição uma única vez e medimos tempos
+  const [inicioLicao, setInicioLicao] = useState<number | null>(null);
+  const [inicioQuestao, setInicioQuestao] = useState<number>(0);
+  const [licaoIniciadaLogada, setLicaoIniciadaLogada] = useState(false);
 
-  const exercicio = exercicios[atual];
-  const total = exercicios.length;
-  const correta = selecionada === exercicio.correta;
+  useEffect(() => {
+    let cancelado = false;
+    async function carregar() {
+      const l = await getLicaoCompleta(slug);
+      if (cancelado) return;
+      setLicao(l);
+      if (!l) {
+        setExercicios([]);
+        return;
+      }
+      const exs = await getExerciciosDaLicao(l.id);
+      if (cancelado) return;
+      setExercicios(exs);
+    }
+    carregar();
+    return () => {
+      cancelado = true;
+    };
+  }, [slug]);
 
-  const personagem = getPersonagem(slug, dim.slug, atual);
+  // Regista licao.iniciada no primeiro render com lição válida
+  useEffect(() => {
+    if (!licao || licaoIniciadaLogada) return;
+    const agora = Date.now();
+    setInicioLicao(agora);
+    setInicioQuestao(agora);
+    setLicaoIniciadaLogada(true);
+    fetch("/api/licao/iniciada", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, licao_id: licao.id }),
+    }).catch(() => {
+      // Não bloqueia o fluxo da criança.
+    });
+  }, [licao, slug, licaoIniciadaLogada]);
+
+  const dim = licao
+    ? DIMENSOES[normalizarDimensao(licao.dimensao)]
+    : getDimensaoBySlug(slug);
+  const titulo =
+    licao?.titulo ??
+    slug.replace(/-/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+  const dimensaoSlug = licao ? normalizarDimensao(licao.dimensao) : dim.slug;
+
+  const exercicio = exercicios && exercicios.length > 0 ? exercicios[atual] : null;
+  const total = exercicios?.length ?? 0;
+  const correta = exercicio !== null && selecionada === exercicio.correta;
+
+  const personagem = getPersonagem(slug, dimensaoSlug, atual);
+
+  // Estado de carga inicial
+  if (exercicios === null) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "var(--fundo-crianca)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "13px",
+            fontWeight: 700,
+            color: "var(--texto-secundario)",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}
+        >
+          A preparar a lição…
+        </p>
+      </div>
+    );
+  }
+
+  // Lição sem exercícios em BD — fallback sóbrio
+  if (exercicios.length === 0 || !exercicio) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "var(--fundo-crianca)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "40px 24px",
+          gap: "20px",
+        }}
+      >
+        <h1
+          className="font-editorial"
+          style={{ fontSize: "24px", fontWeight: 500, textAlign: "center" }}
+        >
+          {titulo}
+        </h1>
+        <p
+          style={{
+            fontSize: "14px",
+            fontWeight: 600,
+            color: "var(--texto-secundario)",
+            textAlign: "center",
+            maxWidth: "360px",
+            lineHeight: 1.6,
+          }}
+        >
+          Esta lição ainda não tem exercícios disponíveis.
+        </p>
+        <Link href={`/licao/${slug}`}>
+          <span
+            style={{
+              fontSize: "13px",
+              fontWeight: 800,
+              color: dim.corTexto,
+              letterSpacing: "0.03em",
+            }}
+          >
+            ← Voltar à lição
+          </span>
+        </Link>
+      </div>
+    );
+  }
 
   const confirmar = () => {
-    if (selecionada === null) return;
+    if (selecionada === null || !exercicio || !licao) return;
     setConfirmada(true);
     setFraseFeedback(feedbackCrianca(correta));
     if (correta) {
       setEstrelas((e) => e + 1);
     }
+
+    const tempoMs = Math.max(0, Date.now() - inicioQuestao);
+    fetch("/api/licao/responder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        licao_id: licao.id,
+        exercicio_id: exercicio.id,
+        slug,
+        titulo: licao.titulo,
+        resposta: { opcao: selecionada },
+        correcto: correta,
+        tempo_ms: tempoMs,
+      }),
+    }).catch(() => {
+      // Não bloqueia — a criança continua a lição.
+    });
   };
 
   const avancar = () => {
@@ -566,11 +236,15 @@ export default function ExerciciosPage({ params }: PageProps) {
       setSelecionada(null);
       setConfirmada(false);
       setFraseFeedback('');
+      setInicioQuestao(Date.now());
     } else {
       // Done — go to reflexao
+      const tempoTotal =
+        inicioLicao !== null ? Math.max(0, Date.now() - inicioLicao) : 0;
       const params = new URLSearchParams({
         respostas: novasRespostas.map((r) => (r ? "1" : "0")).join(""),
         estrelas: String(estrelas + (correta ? 1 : 0)),
+        tempo_total: String(tempoTotal),
       });
       router.push(`/licao/${slug}/reflexao?${params}`);
     }
@@ -621,7 +295,7 @@ export default function ExerciciosPage({ params }: PageProps) {
           className="font-editorial"
           style={{ fontSize: "18px", fontWeight: 500 }}
         >
-          {slug.replace(/-/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+          {titulo}
         </h1>
 
         {/* Estrelas counter */}

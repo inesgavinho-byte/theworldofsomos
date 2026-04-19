@@ -13,9 +13,11 @@ export default function CriancaLoginPage() {
   const [mode, setMode] = useState<"pin" | "email">("pin");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [blocked, setBlocked] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handlePinChange = (index: number, value: string) => {
+    if (blocked) return;
     if (!/^\d*$/.test(value)) return;
     const newPin = [...pin];
     newPin[index] = value.slice(-1);
@@ -31,6 +33,7 @@ export default function CriancaLoginPage() {
   };
 
   const handlePinKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (blocked) return;
     if (e.key === "Backspace" && !pin[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -39,25 +42,43 @@ export default function CriancaLoginPage() {
   const handlePinLogin = async (pinCode: string) => {
     setLoading(true);
     setError("");
-    const supabase = createClient();
 
-    // PIN login uses email: pin_{code}@somos.app convention
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email: `pin_${pinCode}@somos.app`,
-      password: pinCode,
-    });
-
-    if (authError) {
-      setError("PIN incorreto. Tenta outra vez.");
+    let res: Response;
+    try {
+      res = await fetch("/api/crianca/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: pinCode }),
+      });
+    } catch {
+      setError("Não conseguimos entrar agora. Tenta outra vez.");
       setPin(["", "", "", ""]);
       inputRefs.current[0]?.focus();
       setLoading(false);
       return;
     }
 
-    if (data.user) {
-      router.push("/crianca/dashboard");
+    const json: { ok?: boolean; erro?: string; motivo?: string; redirect?: string } =
+      await res.json().catch(() => ({}));
+
+    if (res.ok && json.ok) {
+      router.push(json.redirect ?? "/crianca/dashboard");
+      router.refresh();
+      return;
     }
+
+    if (res.status === 423 || res.status === 429) {
+      setError(json.erro ?? "O teu acesso está bloqueado. Pede a um adulto para te ajudar.");
+      setBlocked(true);
+      setPin(["", "", "", ""]);
+      setLoading(false);
+      return;
+    }
+
+    setError(json.erro ?? "O PIN não está correcto. Tenta outra vez.");
+    setPin(["", "", "", ""]);
+    inputRefs.current[0]?.focus();
+    setLoading(false);
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -184,53 +205,58 @@ export default function CriancaLoginPage() {
 
           {mode === "pin" ? (
             <div>
-              <p
-                style={{
-                  textAlign: "center",
-                  fontSize: "16px",
-                  fontWeight: 700,
-                  marginBottom: "28px",
-                  color: "var(--texto-principal)",
-                }}
-              >
-                Qual é o teu PIN?
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                  justifyContent: "center",
-                  marginBottom: "20px",
-                }}
-              >
-                {pin.map((digit, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => { inputRefs.current[i] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handlePinChange(i, e.target.value)}
-                    onKeyDown={(e) => handlePinKeyDown(i, e)}
-                    className="pin-digit"
-                    autoFocus={i === 0}
-                    style={{} as React.CSSProperties}
-                  />
-                ))}
-              </div>
+              {!blocked && (
+                <>
+                  <p
+                    style={{
+                      textAlign: "center",
+                      fontSize: "16px",
+                      fontWeight: 700,
+                      marginBottom: "28px",
+                      color: "var(--texto-principal)",
+                    }}
+                  >
+                    Qual é o teu PIN?
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "12px",
+                      justifyContent: "center",
+                      marginBottom: "20px",
+                    }}
+                  >
+                    {pin.map((digit, i) => (
+                      <input
+                        key={i}
+                        ref={(el) => { inputRefs.current[i] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handlePinChange(i, e.target.value)}
+                        onKeyDown={(e) => handlePinKeyDown(i, e)}
+                        className="pin-digit"
+                        autoFocus={i === 0}
+                        disabled={loading}
+                        style={{} as React.CSSProperties}
+                      />
+                    ))}
+                  </div>
 
-              {loading && (
-                <p
-                  style={{
-                    textAlign: "center",
-                    fontSize: "13px",
-                    color: "var(--texto-secundario)",
-                    fontWeight: 600,
-                  }}
-                >
-                  A verificar...
-                </p>
+                  {loading && (
+                    <p
+                      style={{
+                        textAlign: "center",
+                        fontSize: "13px",
+                        color: "var(--texto-secundario)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      A verificar...
+                    </p>
+                  )}
+                </>
               )}
             </div>
           ) : (

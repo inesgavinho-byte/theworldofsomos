@@ -44,6 +44,7 @@ export default async function AdminPage() {
     { href: "/admin/conteudo", label: "Conteúdo", desc: "Artigos, lições e exercícios" },
     { href: "/admin/estatisticas", label: "Estatísticas", desc: "Métricas de uso e engagement" },
     { href: "/admin/guilda", label: "Guilda", desc: "Candidaturas e membros da Guilda" },
+    { href: "/admin/diario", label: "Diário", desc: "Memória estratégica do projecto — decisões, ideias, evolução" },
     { href: "/admin/auditoria", label: "Auditoria", desc: "Registo de acções no sistema" },
   ];
 
@@ -93,6 +94,8 @@ export default async function AdminPage() {
         { path: "/admin/conteudo", dinamica: false },
         { path: "/admin/estatisticas", dinamica: false },
         { path: "/admin/guilda", dinamica: false },
+        { path: "/admin/diario", dinamica: false },
+        { path: "/admin/diario/[id]", dinamica: true },
         { path: "/admin/auditoria", dinamica: false },
       ],
     },

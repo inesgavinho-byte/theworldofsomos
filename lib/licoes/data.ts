@@ -1,3 +1,4 @@
+// LEGACY: mantido como referência. A fonte canónica passou a ser a BD via lib/licoes/supabase.ts.
 import type { Dimensao } from "@/lib/dimensoes";
 
 export interface ExercicioData {
