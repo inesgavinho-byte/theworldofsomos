@@ -62,7 +62,9 @@ export type AuditAction =
   // Diário de desenvolvimento
   | 'diario.criada'
   | 'diario.editada'
-  | 'diario.apagada';
+  | 'diario.apagada'
+  // Plano de consolidação (rede de pré-requisitos)
+  | 'plano.consultado';
 
 interface AuditEntry {
   userId?: string;
