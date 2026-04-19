@@ -36,7 +36,7 @@ export async function GET(req: Request): Promise<NextResponse> {
         .limit(5),
     ]);
 
-  const porCompetencia = new Map<string, (typeof progresso)[number]>();
+  const porCompetencia = new Map<string, NonNullable<typeof progresso>[number]>();
   (progresso ?? []).forEach((p) => porCompetencia.set(p.competencia_id, p));
 
   const mapa = (competencias ?? []).map((c) => {
