@@ -42,9 +42,15 @@ interface Props {
   profile: { nome: string; tipo: string } | null;
   crianca: any;
   desafiosPendentes?: any[];
+  diagnosticoPendente?: boolean;
 }
 
-export default function CriancaDashboardClient({ profile, crianca, desafiosPendentes = [] }: Props) {
+export default function CriancaDashboardClient({
+  profile,
+  crianca,
+  desafiosPendentes = [],
+  diagnosticoPendente = false,
+}: Props) {
   const router = useRouter();
   const nome = crianca?.nome ?? profile?.nome ?? "Explorador";
   const streak = 7;
@@ -196,6 +202,79 @@ export default function CriancaDashboardClient({ profile, crianca, desafiosPende
             </div>
           ))}
         </div>
+
+        {/* Diagnóstico inicial — faixa sóbria, opcional */}
+        {diagnosticoPendente && (
+          <Link href="/crianca/diagnostico" style={{ textDecoration: "none" }}>
+            <div
+              className="card-hover"
+              style={{
+                background: "rgba(167,139,250,0.1)",
+                border: "1.5px solid rgba(167,139,250,0.28)",
+                borderRadius: "18px",
+                padding: "16px 18px",
+                marginBottom: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                cursor: "none",
+              }}
+            >
+              <div
+                style={{
+                  width: "38px",
+                  height: "38px",
+                  borderRadius: "12px",
+                  background: "rgba(167,139,250,0.22)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="#534ab7" strokeWidth="1.5" />
+                  <path
+                    d="M12 7V12L15 14"
+                    stroke="#534ab7"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 800,
+                    color: "#534ab7",
+                    marginBottom: "2px",
+                  }}
+                >
+                  Fazer o diagnóstico inicial
+                </p>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--texto-secundario)",
+                    fontWeight: 600,
+                  }}
+                >
+                  15 min · Ajuda-nos a conhecer-te melhor
+                </p>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M9 18L15 12L9 6"
+                  stroke="var(--texto-secundario)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          </Link>
+        )}
 
         {/* Exercícios do livro — enviados pelo pai/mãe */}
         {desafiosPendentes.length > 0 && (

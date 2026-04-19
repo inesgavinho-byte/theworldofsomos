@@ -1,93 +1,116 @@
 import { createClient } from "@/lib/supabase/server";
-import { notFound, redirect } from "next/navigation";
-import ProgressoClient from "./ProgressoClient";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { redirect, notFound } from "next/navigation";
+import ProgressoClient, { type MapaCompetencia } from "./ProgressoClient";
 
-export const dynamic = "force-dynamic";
-
-export default async function ProgressoPage({
-  params,
-}: {
+interface PageProps {
   params: { id: string };
-}) {
-  const supabase = await createClient();
+}
 
+export default async function ProgressoCriancaPage({ params }: PageProps) {
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("tipo")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || profile.tipo !== "pai") {
-    redirect("/dashboard");
-  }
-
-  const { data: crianca } = await supabase
+  const admin = createAdminClient();
+  const { data: crianca } = await admin
     .from("criancas")
-    .select("id, nome, familia_id, curriculo, ano_escolar")
+    .select("id, nome, curriculo, ano_escolar, familia_id, data_nascimento, user_id")
     .eq("id", params.id)
-    .single();
+    .maybeSingle();
 
   if (!crianca) notFound();
 
-  const { data: membro } = await supabase
-    .from("familia_membros")
-    .select("familia_id")
-    .eq("profile_id", user.id)
-    .eq("familia_id", crianca.familia_id)
-    .maybeSingle();
+  // Acesso: própria criança ou membro da família.
+  let autorizado = crianca.user_id === user.id;
+  if (!autorizado) {
+    const { data: membro } = await admin
+      .from("familia_membros")
+      .select("familia_id")
+      .eq("profile_id", user.id)
+      .eq("familia_id", crianca.familia_id)
+      .maybeSingle();
+    autorizado = Boolean(membro);
+  }
+  if (!autorizado) {
+    return (
+      <div style={{ padding: "64px 24px", textAlign: "center" }}>
+        <h1 className="font-editorial" style={{ fontSize: "26px", marginBottom: "12px" }}>
+          Sem acesso a esta criança.
+        </h1>
+        <p style={{ fontSize: "14px", color: "var(--texto-secundario)", fontWeight: 600 }}>
+          Esta área está reservada à família desta criança.
+        </p>
+      </div>
+    );
+  }
 
-  if (!membro) redirect("/familia");
+  const curriculo = crianca.curriculo ?? "PT";
+  const anoEscolar = crianca.ano_escolar ?? "4";
 
-  const { data: competencias } = await supabase
-    .from("competencias")
-    .select("id, codigo_oficial, area, dominio, descricao, ano_escolar, curriculo")
-    .eq("curriculo", crianca.curriculo ?? "PT")
-    .order("ano_escolar", { ascending: true })
-    .order("area", { ascending: true })
-    .order("codigo_oficial", { ascending: true });
+  const [{ data: competencias }, { data: progresso }, { data: diagnosticos }] =
+    await Promise.all([
+      admin
+        .from("competencias")
+        .select("id, area, dominio, ordem_dominio, codigo_oficial, descricao")
+        .eq("curriculo", curriculo)
+        .eq("ano_escolar", anoEscolar)
+        .eq("tipo", "curricular")
+        .order("area")
+        .order("ordem_dominio")
+        .order("codigo_oficial"),
+      admin
+        .from("progresso")
+        .select(
+          "competencia_id, nivel_actual, acertos, tentativas, estado, ultima_tentativa_em",
+        )
+        .eq("crianca_id", crianca.id),
+      admin
+        .from("diagnosticos")
+        .select("id, tipo, estado, iniciado_em, concluido_em, competencias_avaliadas")
+        .eq("crianca_id", crianca.id)
+        .order("iniciado_em", { ascending: false })
+        .limit(3),
+    ]);
 
-  const { data: progresso } = await supabase
-    .from("progresso")
-    .select("competencia_id, nivel_actual, estado")
-    .eq("crianca_id", crianca.id);
+  const porCompetencia = new Map<string, (typeof progresso)[number]>();
+  (progresso ?? []).forEach((p) => porCompetencia.set(p.competencia_id, p));
 
-  const progressoMap: Record<string, { nivel_actual: number; estado: string }> = {};
-  (progresso ?? []).forEach((row) => {
-    progressoMap[row.competencia_id] = {
-      nivel_actual: row.nivel_actual ?? 0,
-      estado: row.estado ?? "nao_avaliada",
+  const mapa: MapaCompetencia[] = (competencias ?? []).map((c) => {
+    const pr = porCompetencia.get(c.id);
+    return {
+      id: c.id,
+      area: c.area ?? "",
+      dominio: c.dominio ?? null,
+      ordem_dominio: c.ordem_dominio ?? 0,
+      codigo_oficial: c.codigo_oficial ?? null,
+      descricao: c.descricao ?? null,
+      nivel: pr?.nivel_actual ?? 0,
+      estado: pr?.estado ?? "nao_avaliada",
+      tentativas: pr?.tentativas ?? 0,
+      acertos: pr?.acertos ?? 0,
+      ultima_tentativa_em: pr?.ultima_tentativa_em ?? null,
     };
   });
 
-  // Lacunas de base: para cada competência avançada, contar pré-requisitos fortes
-  // ainda não consolidados (nível < 3 ou não avaliados) na criança actual.
-  const { data: ligacoesFortes } = await supabase
-    .from("competencia_pre_requisitos")
-    .select("competencia_id, pre_requisito_id")
-    .eq("tipo", "forte");
-
-  const lacunasMap: Record<string, number> = {};
-  (ligacoesFortes ?? []).forEach((row) => {
-    const prereq = progressoMap[row.pre_requisito_id];
-    const pendente =
-      !prereq || prereq.nivel_actual < 3 || prereq.estado === "nao_avaliada";
-    if (pendente) {
-      lacunasMap[row.competencia_id] = (lacunasMap[row.competencia_id] ?? 0) + 1;
-    }
-  });
+  const ultimoDiagnostico =
+    (diagnosticos ?? []).find((d) => d.estado === "concluido") ??
+    (diagnosticos ?? [])[0] ??
+    null;
 
   return (
     <ProgressoClient
-      crianca={{ id: crianca.id, nome: crianca.nome, ano_escolar: crianca.ano_escolar }}
-      competencias={competencias ?? []}
-      progressoMap={progressoMap}
-      lacunasMap={lacunasMap}
+      crianca={{
+        id: crianca.id,
+        nome: crianca.nome ?? "",
+        curriculo,
+        anoEscolar,
+        dataNascimento: crianca.data_nascimento ?? null,
+      }}
+      mapa={mapa}
+      ultimoDiagnostico={ultimoDiagnostico}
     />
   );
 }

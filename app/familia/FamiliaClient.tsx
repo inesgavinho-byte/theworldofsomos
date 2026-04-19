@@ -400,6 +400,60 @@ export default function FamiliaClient({
           </Link>
         </div>
 
+        {/* Progresso curricular das crianças */}
+        {criancas.length > 0 && tipo === "pai" && (
+          <div style={{ marginBottom: "36px" }}>
+            <h3
+              className="font-editorial"
+              style={{ fontSize: "20px", fontWeight: 500, marginBottom: "14px" }}
+            >
+              Progresso curricular
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {criancas.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/familia/crianca/${c.id}/progresso`}
+                  style={{ textDecoration: "none" }}
+                >
+                  <div
+                    className="card-hover"
+                    style={{
+                      background: "rgba(255,255,255,0.7)",
+                      borderRadius: "14px",
+                      padding: "14px 18px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      border: "1px solid rgba(160,144,128,0.15)",
+                      cursor: "none",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color: "var(--texto-principal)",
+                      }}
+                    >
+                      Ver progresso de {c.nome}
+                    </span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M9 18L15 12L9 6"
+                        stroke="var(--texto-secundario)"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Histórico */}
         <div>
           <div

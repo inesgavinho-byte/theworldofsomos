@@ -64,7 +64,12 @@ export type AuditAction =
   | 'diario.editada'
   | 'diario.apagada'
   // Plano de consolidação (rede de pré-requisitos)
-  | 'plano.consultado';
+  | 'plano.consultado'
+  // Diagnóstico curricular
+  | 'diagnostico.iniciado'
+  | 'diagnostico.exercicio_respondido'
+  | 'diagnostico.concluido'
+  | 'diagnostico.abandonado';
 
 interface AuditEntry {
   userId?: string;
