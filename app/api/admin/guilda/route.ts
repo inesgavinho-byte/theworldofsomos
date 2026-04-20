@@ -4,8 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 import { log } from "@/lib/audit";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function GET() {
   // Auth check
   const supabase = await createClient();
@@ -104,6 +102,7 @@ export async function PATCH(request: NextRequest) {
 
     // Send approval email
     try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
         from: "SOMOS <noreply@theworldofsomos.com>",
         to: candidatura.email,

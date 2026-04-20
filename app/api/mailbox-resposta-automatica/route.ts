@@ -7,7 +7,11 @@ import { SOMOS_TOM_SYSTEM } from "@/lib/claude-system-prompt";
 // Called by a cron job — processes cartas that have been waiting > 48h without response
 // Also handles 7-day transformation
 
-const client = new Anthropic();
+let cachedClient: Anthropic | null = null;
+function getClient(): Anthropic {
+  if (!cachedClient) cachedClient = new Anthropic();
+  return cachedClient;
+}
 
 export async function POST(req: Request) {
   try {
@@ -40,7 +44,7 @@ export async function POST(req: Request) {
 
     for (const carta of cartasSemResposta ?? []) {
       try {
-        const response = await client.messages.create({
+        const response = await getClient().messages.create({
           model: "claude-opus-4-5",
           max_tokens: 400,
           system: SOMOS_TOM_SYSTEM + `\n\nÉs o SOMOS — uma plataforma que acredita que os nossos filhos
@@ -104,7 +108,7 @@ REGRAS:
     const temas: string[] = [];
     for (const carta of cartasExpiradas ?? []) {
       try {
-        const temaResponse = await client.messages.create({
+        const temaResponse = await getClient().messages.create({
           model: "claude-opus-4-5",
           max_tokens: 60,
           system: SOMOS_TOM_SYSTEM + `\n\nAnalisa esta carta anónima e identifica o tema principal em 2-4 palavras em português.
