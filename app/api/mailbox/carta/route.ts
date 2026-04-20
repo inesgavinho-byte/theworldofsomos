@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/mailbox/carta — returns a random carta in 'aguarda' state (not the user's own)
 // Does NOT expose autor_id
 export async function GET() {

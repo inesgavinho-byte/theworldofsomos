@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/mailbox/minhas — returns the current user's cartas
 export async function GET() {
   try {
