@@ -104,13 +104,33 @@ export async function middleware(request: NextRequest) {
   }
 
   // Fix 9: User sem família → onboarding
-  // Fix 2: Não escrever cookie no middleware — só ler. Cookie é gerido pelo /api/auth/login.
+  // Fix 11: cookie somos-context pode estar dessincronizado da BD (onboarding
+  // cria a família via client, sem tocar em nenhuma API que escreva o cookie).
+  // Antes de redirecionar para /onboarding, confirmar na BD se o user tem
+  // mesmo família; se tiver, curar o cookie e deixar passar — assim evita-se
+  // loop de redirects e criação duplicada de criança.
   if (
     context.activeFamilyId === null &&
     !pathname.startsWith("/onboarding") &&
     !pathname.startsWith("/api/")
   ) {
-    return NextResponse.redirect(new URL("/onboarding", request.url));
+    const { data: membro } = await supabase
+      .from("familia_membros")
+      .select("familia_id")
+      .eq("profile_id", user.id)
+      .maybeSingle();
+
+    if (!membro?.familia_id) {
+      return NextResponse.redirect(new URL("/onboarding", request.url));
+    }
+
+    const novoContexto = { ...context, activeFamilyId: membro.familia_id };
+    supabaseResponse.cookies.set("somos-context", JSON.stringify(novoContexto), {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
   }
 
   // Family/parent routes — any authenticated non-crianca user
