@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { primeiroNome } from "@/lib/primeiro-nome";
 
 const DIAS_SEMANA = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 const HOJE_IDX = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
@@ -138,7 +139,7 @@ export default function CriancaDashboardClient({
             className="font-editorial"
             style={{ fontSize: "28px", fontWeight: 500, marginBottom: "4px" }}
           >
-            Olá, {nome}
+            Olá, {primeiroNome(nome)}
           </h2>
           <p style={{ fontSize: "13px", color: "var(--texto-secundario)", fontWeight: 600 }}>
             O que vamos descobrir hoje?

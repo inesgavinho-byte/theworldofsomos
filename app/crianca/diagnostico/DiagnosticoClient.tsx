@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { primeiroNome } from "@/lib/primeiro-nome";
 
 interface ExercicioDiagnostico {
   id: string;
@@ -182,7 +183,7 @@ export default function DiagnosticoClient({ nome }: Props) {
               color: "var(--texto-principal)",
             }}
           >
-            Olá{nome ? `, ${nome}` : ""}.
+            Olá{primeiroNome(nome) ? `, ${primeiroNome(nome)}` : ""}.
           </h1>
           <p
             style={{
