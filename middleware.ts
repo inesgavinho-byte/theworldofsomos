@@ -81,9 +81,13 @@ export async function middleware(request: NextRequest) {
     context = { ...DEFAULT_CONTEXT };
   }
 
-  // Child routing — Fix 3: /licao removido daqui (serve criança E adulto)
+  // Child routing — /licao/* e /api/* servem criança E adulto
   if (isCrianca) {
-    if (pathname.startsWith("/crianca")) {
+    if (
+      pathname.startsWith("/crianca") ||
+      pathname.startsWith("/licao") ||
+      pathname.startsWith("/api/")
+    ) {
       return supabaseResponse;
     }
     return NextResponse.redirect(new URL("/crianca/dashboard", request.url));
