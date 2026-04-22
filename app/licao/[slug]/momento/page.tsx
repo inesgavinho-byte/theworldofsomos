@@ -8,8 +8,6 @@ interface Momento {
   momento_historico: string;
   titulo?: string;
   para_crianca: string;
-  // Conteúdo destinado ao painel da família — NUNCA renderizar no ecrã da criança.
-  para_adulto: string;
 }
 
 interface Jarro {
@@ -141,23 +139,46 @@ export default function MomentoPage({ params }: PageProps) {
               }}
             />
 
-            {/* The Moment — large Cormorant italic */}
-            <p
-              className="font-editorial"
-              style={{
-                fontSize: "clamp(26px, 5vw, 34px)",
-                fontStyle: "italic",
-                fontWeight: 400,
-                lineHeight: 1.55,
-                color: "rgba(255,255,255,0.95)",
-                textAlign: "center",
-                marginBottom: "36px",
-                letterSpacing: "0.01em",
-                whiteSpace: "pre-line",
-              }}
-            >
-              {momento.para_crianca}
-            </p>
+            {momento.titulo && (
+              <p
+                className="font-editorial"
+                style={{
+                  fontSize: "clamp(22px, 4vw, 28px)",
+                  fontStyle: "italic",
+                  fontWeight: 500,
+                  lineHeight: 1.4,
+                  color: "rgba(255,255,255,0.95)",
+                  textAlign: "center",
+                  marginBottom: "24px",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                {momento.titulo}
+              </p>
+            )}
+
+            {momento.para_crianca
+              .split(/\n\s*\n+/)
+              .map((p) => p.trim())
+              .filter((p) => p.length > 0)
+              .map((paragrafo, i) => (
+                <p
+                  key={i}
+                  style={{
+                    fontSize: "clamp(18px, 3.2vw, 22px)",
+                    fontWeight: 500,
+                    lineHeight: 1.7,
+                    color: "rgba(255,255,255,0.95)",
+                    textAlign: "center",
+                    marginBottom: "20px",
+                    maxWidth: "480px",
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                  }}
+                >
+                  {paragrafo}
+                </p>
+              ))}
 
             {/* Decorative line */}
             <div
@@ -165,12 +186,12 @@ export default function MomentoPage({ params }: PageProps) {
                 width: "40px",
                 height: "1px",
                 background: `${dim.cor}40`,
-                margin: "0 auto 28px",
+                margin: "28px auto 16px",
               }}
             />
 
             {/* Historical anchor */}
-            {momento.momento_historico ? (
+            {momento.momento_historico && (
               <p
                 style={{
                   fontSize: "12px",
@@ -183,7 +204,7 @@ export default function MomentoPage({ params }: PageProps) {
               >
                 {momento.momento_historico}
               </p>
-            ) : null}
+            )}
           </>
         ) : (
           <p
