@@ -60,8 +60,6 @@ interface Momento {
   momento_historico: string;
   titulo?: string;
   para_crianca: string;
-  // Conteúdo destinado ao painel da família — NUNCA renderizar no ecrã da criança.
-  para_adulto: string;
 }
 
 interface PageProps {
@@ -107,19 +105,14 @@ function ReflexaoContent({ slug }: { slug: string }) {
     if (!licao) return;
 
     // Se a lição já tem momento curado na BD, usa-o directamente.
+    // Nota: o conteúdo de momento.adulto (resumo_aprendizagem, sugestao) é
+    // exclusivo do painel família e nunca deve aparecer no ecrã da criança.
     const momentoBD = licao.momento?.crianca;
     if (momentoBD?.texto) {
-      const resumo = licao.momento?.adulto?.resumo_aprendizagem;
-      const paraAdulto = Array.isArray(resumo)
-        ? resumo.filter((s) => typeof s === "string" && s.trim().length > 0).join(" ")
-        : typeof resumo === "string"
-          ? resumo
-          : "";
       const adaptado: Momento = {
         momento_historico: momentoBD.data ?? "",
         titulo: momentoBD.titulo,
         para_crianca: momentoBD.texto,
-        para_adulto: paraAdulto || licao.momento?.adulto?.sugestao || "",
       };
       setMomento(adaptado);
       setMomentoLoading(false);
@@ -593,13 +586,13 @@ function ReflexaoContent({ slug }: { slug: string }) {
                   Um momento da história
                 </p>
 
-                {momento.titulo ? (
+                {momento.titulo && (
                   <p
                     className="font-editorial"
                     style={{
                       fontSize: "20px",
                       fontStyle: "italic",
-                      fontWeight: 400,
+                      fontWeight: 500,
                       lineHeight: 1.4,
                       color: "var(--texto-principal)",
                       marginBottom: "16px",
@@ -607,7 +600,7 @@ function ReflexaoContent({ slug }: { slug: string }) {
                   >
                     {momento.titulo}
                   </p>
-                ) : null}
+                )}
 
                 {momento.para_crianca
                   .split(/\n\s*\n+/)
@@ -617,18 +610,18 @@ function ReflexaoContent({ slug }: { slug: string }) {
                     <p
                       key={i}
                       style={{
-                        fontSize: "16px",
+                        fontSize: "17px",
                         fontWeight: 500,
                         lineHeight: 1.7,
                         color: "var(--texto-principal)",
-                        marginBottom: "14px",
+                        marginBottom: "16px",
                       }}
                     >
                       {paragrafo}
                     </p>
                   ))}
 
-                {momento.momento_historico ? (
+                {momento.momento_historico && (
                   <p
                     style={{
                       fontSize: "11px",
@@ -636,13 +629,13 @@ function ReflexaoContent({ slug }: { slug: string }) {
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
                       color: "var(--texto-secundario)",
-                      marginTop: "6px",
+                      marginTop: "8px",
                       opacity: 0.7,
                     }}
                   >
                     {momento.momento_historico}
                   </p>
-                ) : null}
+                )}
               </div>
             ) : null}
           </div>

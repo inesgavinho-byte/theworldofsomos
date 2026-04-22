@@ -7,7 +7,6 @@ import { ERASMO_PITHOS_INTRO } from "@/lib/licao/erasmo";
 interface MomentoEntregue {
   momento_historico?: string | null;
   para_crianca?: string | null;
-  para_adulto?: string | null;
 }
 
 interface JarroDesbloqueado {
@@ -104,6 +103,10 @@ export async function POST(req: Request): Promise<NextResponse> {
   // Entregar Momento apenas na primeira vez.
   const momentoEntregue = !jaCompletou && Boolean(momento?.para_crianca);
   if (momentoEntregue) {
+    // Nota: não duplicamos o texto do adulto aqui. O painel família lê
+    // momento.adulto directamente de licoes via JOIN. A coluna
+    // sessoes.momento_adulto fica null nos registos novos (legacy rows
+    // mantêm o valor antigo mas deixam de ser usadas pelo dashboard).
     await admin.from("sessoes").insert({
       crianca_id: criancaId,
       licao_id,
@@ -112,7 +115,6 @@ export async function POST(req: Request): Promise<NextResponse> {
       tipo: "narrativa",
       momento_historico: momento?.momento_historico ?? null,
       momento_crianca: momento?.para_crianca ?? null,
-      momento_adulto: momento?.para_adulto ?? null,
       momento_entregue_em: new Date().toISOString(),
     });
 

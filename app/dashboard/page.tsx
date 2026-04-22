@@ -37,20 +37,42 @@ export default async function DashboardPage() {
     criancas = data ?? [];
   }
 
-  // Fetch last session with momento for each child
-  const ultimosMomentos: Record<string, any> = {};
+  // Fetch last delivered moment for each child.
+  // O conteúdo para o adulto vive em licoes.momento.adulto (fonte de verdade).
+  // A tabela sessoes apenas regista QUANDO foi entregue — não duplicamos o texto.
+  const ultimosMomentos: Record<
+    string,
+    { titulo_licao: string; momento_adulto: string; created_at: string }
+  > = {};
   for (const crianca of criancas) {
     const { data: sessao } = await supabase
       .from("sessoes")
-      .select("titulo_licao, momento_adulto, created_at")
+      .select("titulo_licao, created_at, licoes(momento)")
       .eq("crianca_id", crianca.id)
-      .not("momento_adulto", "is", null)
+      .not("momento_entregue_em", "is", null)
       .order("created_at", { ascending: false })
       .limit(1)
       .single();
-    if (sessao) {
-      ultimosMomentos[crianca.id] = sessao;
-    }
+    if (!sessao) continue;
+
+    const licaoJoined = (sessao as any).licoes as
+      | { momento?: { adulto?: { resumo_aprendizagem?: string[] | string; sugestao?: string } } }
+      | null;
+    const adulto = licaoJoined?.momento?.adulto;
+    const resumo = adulto?.resumo_aprendizagem;
+    const paraAdulto = Array.isArray(resumo)
+      ? resumo.filter((s) => typeof s === "string" && s.trim().length > 0).join(" ")
+      : typeof resumo === "string"
+        ? resumo
+        : "";
+    const texto = paraAdulto || adulto?.sugestao || "";
+    if (!texto) continue;
+
+    ultimosMomentos[crianca.id] = {
+      titulo_licao: (sessao as any).titulo_licao ?? "",
+      momento_adulto: texto,
+      created_at: (sessao as any).created_at,
+    };
   }
 
   // Fix 6: roles[] é fonte de verdade. tipo é fallback legacy durante transição.
