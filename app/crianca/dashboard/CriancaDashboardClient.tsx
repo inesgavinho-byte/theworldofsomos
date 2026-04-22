@@ -7,128 +7,258 @@ import { primeiroNome } from "@/lib/primeiro-nome";
 const DIAS_SEMANA = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 const HOJE_IDX = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
 
-const MISSAO = {
-  slug: "as-emocoes-sao-dados",
-  titulo: "As Emoções são Dados",
-  dimensao: "Identitária",
-  cor: "#a78bfa",
-  corCard: "#2a2250",
-  progresso: 0,
-  total: 5,
-};
+const COR_FALLBACK = "#a78bfa";
 
-// Lições universais — pertencem à condição humana, não ao currículo
-const LICOES_UNIVERSAIS = [
-  { slug: "as-emocoes-sao-dados",  titulo: "As Emoções são Dados",   dimensao: "Identitária", cor: "#a78bfa", feito: false },
-  { slug: "errar-e-parte-do-mapa", titulo: "Errar é Parte do Mapa",  dimensao: "Identitária", cor: "#a78bfa", feito: false },
-  { slug: "o-proposito",           titulo: "O Propósito",            dimensao: "Social",      cor: "#facc15", feito: false },
-];
+export type LicaoStatus = "nao_comecada" | "em_curso" | "completa";
 
-// Lições curriculares — filtradas pelo currículo da criança
-const LICOES_CURRICULARES = [
-  { slug: "palavras-que-voam",          titulo: "As Palavras que Voam",       dimensao: "Artística",   cor: "#f472b6", feito: false },
-  { slug: "o-mapa-dos-numeros",         titulo: "O Mapa dos Números",         dimensao: "Lógica",      cor: "#60a5fa", feito: false },
-  { slug: "a-vida-secreta-das-plantas", titulo: "A Vida Secreta das Plantas", dimensao: "Naturalista", cor: "#4ade80", feito: false },
-  { slug: "a-aventura-em-ingles",       titulo: "The Big Adventure",          dimensao: "Artística",   cor: "#f472b6", feito: false },
-  { slug: "os-descobrimentos",          titulo: "Os Descobrimentos",          dimensao: "Social",      cor: "#facc15", feito: false },
-];
+export interface LicaoDashboard {
+  id: string;
+  slug: string;
+  titulo: string;
+  subtitulo: string | null;
+  tipo: string;
+  curriculo: string | null;
+  dimensao: string;
+  cor: string | null;
+  duracao_min: number | null;
+  ordem: number | null;
+  status: LicaoStatus;
+  num_exercicios: number;
+}
 
-const TAREFAS = [
-  { id: 1, texto: "Ler 15 minutos sobre florestas", feita: false, cor: "#4ade80" },
-  { id: 2, texto: "Fazer o exercício de matemática", feita: true, cor: "#60a5fa" },
-  { id: 3, texto: "Pedir à avó para contar uma história", feita: false, cor: "#f472b6" },
-];
+export interface MissaoDoDia {
+  slug: string;
+  titulo: string;
+  dimensao: string;
+  cor: string | null;
+  num_exercicios: number;
+  status: LicaoStatus;
+}
 
 interface Props {
   profile: { nome: string; tipo: string } | null;
   crianca: any;
+  licoes: LicaoDashboard[];
+  missaoDoDia: MissaoDoDia | null;
+  streak: number;
+  diasEstaSemana: number[];
+  estrelasSemana: number;
   desafiosPendentes?: any[];
   diagnosticoPendente?: boolean;
 }
 
+function safeCor(cor: string | null | undefined): string {
+  return cor && cor.trim().length > 0 ? cor : COR_FALLBACK;
+}
+
+const MISSAO_CARD_BG = "#1a1714";
+
 export default function CriancaDashboardClient({
   profile,
   crianca,
+  licoes,
+  missaoDoDia,
+  streak,
+  diasEstaSemana,
+  estrelasSemana,
   desafiosPendentes = [],
   diagnosticoPendente = false,
 }: Props) {
   const router = useRouter();
   const nome = crianca?.nome ?? profile?.nome ?? "Explorador";
-  const streak = 7;
   const estrelasTotal = Number(crianca?.estrelas_total ?? 0);
 
+  const licoesUniversais = licoes.filter((l) => l.tipo === "universal");
+  const licoesCurriculares = licoes.filter((l) => l.tipo === "curricular");
+  const diasSet = new Set(diasEstaSemana);
+
   const handleLogout = async () => {
-    // Fix 10: usar API route para apagar cookie somos-context no logout
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/crianca/login");
   };
 
+  const missaoCor = safeCor(missaoDoDia?.cor ?? null);
+  const missaoCardBg = MISSAO_CARD_BG;
+
   return (
     <div
+      className="crianca-dashboard"
       style={{
         minHeight: "100vh",
         background: "var(--fundo-crianca)",
         position: "relative",
         zIndex: 1,
-        padding: "24px 16px 64px",
         overflowY: "auto",
       }}
     >
-      {/* Top bar */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "24px",
-          maxWidth: "560px",
-          margin: "0 auto 24px",
-        }}
-      >
-        <h1 className="font-editorial" style={{ fontSize: "22px", fontWeight: 500 }}>
-          SOMOS
-        </h1>
-        <button
-          onClick={handleLogout}
+      <style>{`
+        .crianca-dashboard {
+          padding: 48px clamp(16px, 4vw, 56px) 80px;
+        }
+        @media (max-width: 768px) {
+          .crianca-dashboard {
+            padding: 24px 16px 64px;
+          }
+        }
+        .dashboard-container {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        .dashboard-hero {
+          max-width: 900px;
+          margin: 0 auto 32px;
+        }
+        .licoes-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 20px;
+        }
+        @media (max-width: 768px) {
+          .licoes-grid {
+            grid-template-columns: 1fr;
+            gap: 14px;
+          }
+        }
+        .licao-card {
+          position: relative;
+          aspect-ratio: 1 / 1;
+          background: rgba(255,255,255,0.75);
+          border: 1px solid rgba(160,144,128,0.16);
+          border-radius: 16px;
+          padding: 18px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+          cursor: none;
+          overflow: hidden;
+        }
+        @media (max-width: 768px) {
+          .licao-card {
+            aspect-ratio: auto;
+            min-height: 140px;
+          }
+        }
+        .licao-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 28px -16px rgba(26,23,20,0.18);
+        }
+        .licao-card.completa {
+          background: rgba(74,222,128,0.08);
+          border-color: rgba(74,222,128,0.28);
+        }
+        .licao-card-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+        }
+        .secao-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin: 40px 0 18px;
+        }
+        @media (max-width: 768px) {
+          .secao-header {
+            margin: 28px 0 14px;
+          }
+        }
+        .secao-header-linha {
+          flex: 1;
+          height: 1px;
+          background: rgba(160,144,128,0.18);
+        }
+        .metrics-row {
+          display: flex;
+          gap: 14px;
+          flex-wrap: wrap;
+          margin-bottom: 28px;
+        }
+        .metric-card {
+          background: rgba(255,255,255,0.6);
+          border-radius: 14px;
+          padding: 14px 20px;
+          border: 1px solid rgba(160,144,128,0.12);
+          display: flex;
+          align-items: baseline;
+          gap: 10px;
+        }
+        .semana-pills {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .semana-pill {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          min-width: 44px;
+        }
+        .semana-pill-circle {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 800;
+        }
+      `}</style>
+
+      <div className="dashboard-container">
+        {/* Top bar */}
+        <div
           style={{
-            background: "transparent",
-            border: "1.5px solid rgba(160,144,128,0.3)",
-            borderRadius: "10px",
-            padding: "5px 12px",
-            fontSize: "12px",
-            fontWeight: 700,
-            fontFamily: "Nunito, sans-serif",
-            color: "var(--texto-secundario)",
-            cursor: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "40px",
           }}
         >
-          Sair
-        </button>
-      </div>
+          <h1 className="font-editorial" style={{ fontSize: "24px", fontWeight: 500 }}>
+            SOMOS
+          </h1>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: "transparent",
+              border: "1.5px solid rgba(160,144,128,0.3)",
+              borderRadius: "10px",
+              padding: "6px 14px",
+              fontSize: "12px",
+              fontWeight: 700,
+              fontFamily: "Nunito, sans-serif",
+              color: "var(--texto-secundario)",
+              cursor: "none",
+            }}
+          >
+            Sair
+          </button>
+        </div>
 
-      {/* Central column */}
-      <div style={{ maxWidth: "560px", margin: "0 auto" }}>
-        {/* Avatar + nome */}
+        {/* Avatar + saudação */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            marginBottom: "20px",
+            marginBottom: "28px",
             animation: "fadeIn 0.5s ease",
           }}
         >
           <div
             style={{
-              width: "72px",
-              height: "72px",
+              width: "84px",
+              height: "84px",
               borderRadius: "50%",
               background: "linear-gradient(135deg, #a78bfa 0%, #4ade80 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: "12px",
-              fontSize: "28px",
+              marginBottom: "14px",
+              fontSize: "32px",
               fontWeight: 900,
               color: "white",
             }}
@@ -137,83 +267,74 @@ export default function CriancaDashboardClient({
           </div>
           <h2
             className="font-editorial"
-            style={{ fontSize: "28px", fontWeight: 500, marginBottom: "4px" }}
+            style={{ fontSize: "34px", fontWeight: 500, marginBottom: "4px" }}
           >
             Olá, {primeiroNome(nome)}
           </h2>
-          <p style={{ fontSize: "13px", color: "var(--texto-secundario)", fontWeight: 600 }}>
+          <p style={{ fontSize: "14px", color: "var(--texto-secundario)", fontWeight: 600 }}>
             O que vamos descobrir hoje?
           </p>
+          {streak > 0 && (
+            <p
+              style={{
+                marginTop: "10px",
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "var(--roxo-texto)",
+                letterSpacing: "0.02em",
+              }}
+            >
+              🔥 {streak} {streak === 1 ? "dia seguido" : "dias seguidos"}
+            </p>
+          )}
         </div>
 
-        {/* Streak pill */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
-          <div className="streak-pill">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2C12 2 8 8 8 13C8 15.76 9.79 18 12 18C14.21 18 16 15.76 16 13C16 8 12 2 12 2Z"
-                stroke="#a78bfa"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-              />
-              <path d="M8 13C8 15.76 9.79 18 12 18" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            <span style={{ color: "var(--roxo-texto)" }}>{streak} dias seguidos</span>
+        {/* Métricas — só verdade */}
+        <div className="metrics-row" style={{ justifyContent: "center" }}>
+          <div className="metric-card">
+            <span style={{ fontSize: "22px", fontWeight: 900, color: "#facc15" }}>
+              {estrelasTotal}
+            </span>
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "var(--texto-secundario)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+              }}
+            >
+              Estrelas
+            </span>
+          </div>
+          <div className="metric-card">
+            <span style={{ fontSize: "22px", fontWeight: 900, color: "#4ade80" }}>
+              {licoes.length}
+            </span>
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "var(--texto-secundario)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+              }}
+            >
+              Lições disponíveis
+            </span>
           </div>
         </div>
 
-        {/* Stats 3 colunas */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: "12px",
-            marginBottom: "20px",
-          }}
-        >
-          {[
-            { label: "Estrelas", valor: String(estrelasTotal), cor: "#facc15" },
-            { label: "Lições", valor: "12", cor: "#4ade80" },
-            { label: "Semanas", valor: "3", cor: "#a78bfa" },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              style={{
-                background: "rgba(255,255,255,0.6)",
-                borderRadius: "14px",
-                padding: "14px",
-                textAlign: "center",
-                border: "1px solid rgba(160,144,128,0.12)",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "24px",
-                  fontWeight: 900,
-                  color: stat.cor,
-                  lineHeight: 1,
-                  marginBottom: "4px",
-                }}
-              >
-                {stat.valor}
-              </p>
-              <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--texto-secundario)" }}>
-                {stat.label}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Diagnóstico inicial — faixa sóbria, opcional */}
+        {/* Diagnóstico pendente */}
         {diagnosticoPendente && (
           <Link href="/crianca/diagnostico" style={{ textDecoration: "none" }}>
             <div
-              className="card-hover"
+              className="card-hover dashboard-hero"
               style={{
                 background: "rgba(167,139,250,0.1)",
                 border: "1.5px solid rgba(167,139,250,0.28)",
                 borderRadius: "18px",
-                padding: "16px 18px",
+                padding: "18px 20px",
                 marginBottom: "16px",
                 display: "flex",
                 alignItems: "center",
@@ -223,8 +344,8 @@ export default function CriancaDashboardClient({
             >
               <div
                 style={{
-                  width: "38px",
-                  height: "38px",
+                  width: "42px",
+                  height: "42px",
                   borderRadius: "12px",
                   background: "rgba(167,139,250,0.22)",
                   display: "flex",
@@ -244,23 +365,10 @@ export default function CriancaDashboardClient({
                 </svg>
               </div>
               <div style={{ flex: 1 }}>
-                <p
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 800,
-                    color: "#534ab7",
-                    marginBottom: "2px",
-                  }}
-                >
+                <p style={{ fontSize: "14px", fontWeight: 800, color: "#534ab7", marginBottom: "2px" }}>
                   Fazer o diagnóstico inicial
                 </p>
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "var(--texto-secundario)",
-                    fontWeight: 600,
-                  }}
-                >
+                <p style={{ fontSize: "12px", color: "var(--texto-secundario)", fontWeight: 600 }}>
                   15 min · Ajuda-nos a conhecer-te melhor
                 </p>
               </div>
@@ -277,9 +385,9 @@ export default function CriancaDashboardClient({
           </Link>
         )}
 
-        {/* Exercícios do livro — enviados pelo pai/mãe */}
+        {/* Desafios IA enviados pelo pai/mãe */}
         {desafiosPendentes.length > 0 && (
-          <div style={{ marginBottom: "20px" }}>
+          <div className="dashboard-hero" style={{ marginBottom: "16px" }}>
             {desafiosPendentes.map((desafio) => (
               <Link key={desafio.id} href={`/crianca/exercicios-ia/${desafio.id}`}>
                 <div
@@ -312,7 +420,7 @@ export default function CriancaDashboardClient({
                     📚
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: "13px", fontWeight: 800, color: "#185fa5", marginBottom: "2px" }}>
+                    <p style={{ fontSize: "14px", fontWeight: 800, color: "#185fa5", marginBottom: "2px" }}>
                       A tua mãe enviou-te exercícios novos!
                     </p>
                     <p style={{ fontSize: "12px", color: "var(--texto-secundario)", fontWeight: 600 }}>
@@ -320,7 +428,13 @@ export default function CriancaDashboardClient({
                     </p>
                   </div>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 12H19M13 6L19 12L13 18" stroke="#185fa5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path
+                      d="M5 12H19M13 6L19 12L13 18"
+                      stroke="#185fa5"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               </Link>
@@ -328,331 +442,278 @@ export default function CriancaDashboardClient({
           </div>
         )}
 
-        {/* Missão do dia */}
-        <Link href={`/licao/${MISSAO.slug}/exercicios`}>
+        {/* Missão do dia ou bloco "Completaste tudo" */}
+        {missaoDoDia ? (
+          <Link href={`/licao/${missaoDoDia.slug}/exercicios`}>
+            <div
+              className="card-hover dashboard-hero"
+              style={{
+                background: missaoCardBg,
+                borderRadius: "22px",
+                padding: "28px",
+                marginBottom: "16px",
+                color: "white",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  width: "260px",
+                  height: "260px",
+                  background: `radial-gradient(circle at 80% 20%, ${missaoCor}28 0%, transparent 70%)`,
+                  pointerEvents: "none",
+                }}
+              />
+              <p
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  opacity: 0.5,
+                  marginBottom: "10px",
+                }}
+              >
+                Missão do dia
+              </p>
+              <div
+                className="badge-dimensao"
+                style={{
+                  background: `${missaoCor}25`,
+                  color: missaoCor,
+                  marginBottom: "12px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: missaoCor,
+                  }}
+                />
+                {missaoDoDia.dimensao}
+              </div>
+              <h3
+                className="font-editorial"
+                style={{ fontSize: "32px", fontWeight: 500, marginBottom: "16px", lineHeight: 1.1 }}
+              >
+                {missaoDoDia.titulo}
+              </h3>
+
+              {missaoDoDia.num_exercicios > 0 && (
+                <p style={{ fontSize: "12px", opacity: 0.55, marginBottom: "16px" }}>
+                  {missaoDoDia.num_exercicios} exercícios
+                  {missaoDoDia.status === "em_curso" ? " · Retomar" : ""}
+                </p>
+              )}
+
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: missaoCor,
+                  color: missaoCardBg,
+                  padding: "10px 20px",
+                  borderRadius: "12px",
+                  fontSize: "14px",
+                  fontWeight: 800,
+                }}
+              >
+                {missaoDoDia.status === "em_curso" ? "Continuar" : "Começar"}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M5 12H19M13 6L19 12L13 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+          </Link>
+        ) : licoes.length > 0 ? (
           <div
-            className="card-hover"
+            className="dashboard-hero"
             style={{
-              background: MISSAO.corCard,
-              borderRadius: "20px",
-              padding: "20px",
-              marginBottom: "20px",
-              color: "white",
-              position: "relative",
-              overflow: "hidden",
+              background: "rgba(74,222,128,0.1)",
+              border: "1.5px solid rgba(74,222,128,0.3)",
+              borderRadius: "22px",
+              padding: "28px",
+              marginBottom: "16px",
+              textAlign: "center",
             }}
           >
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                right: 0,
-                width: "120px",
-                height: "120px",
-                background: `radial-gradient(circle at 80% 20%, ${MISSAO.cor}20 0%, transparent 70%)`,
-              }}
-            />
             <p
               style={{
                 fontSize: "11px",
                 fontWeight: 700,
-                letterSpacing: "0.1em",
+                letterSpacing: "0.12em",
                 textTransform: "uppercase",
-                opacity: 0.5,
+                color: "#2d5c3a",
                 marginBottom: "8px",
               }}
             >
               Missão do dia
             </p>
-            <div
-              className="badge-dimensao"
-              style={{
-                background: `${MISSAO.cor}25`,
-                color: MISSAO.cor,
-                marginBottom: "10px",
-              }}
-            >
-              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: MISSAO.cor }} />
-              {MISSAO.dimensao}
-            </div>
             <h3
               className="font-editorial"
-              style={{ fontSize: "22px", fontWeight: 500, marginBottom: "12px" }}
+              style={{ fontSize: "26px", fontWeight: 500, color: "#2d5c3a", marginBottom: "6px" }}
             >
-              {MISSAO.titulo}
+              Completaste tudo
             </h3>
+            <p style={{ fontSize: "14px", color: "var(--texto-secundario)", fontWeight: 600 }}>
+              Vem explorar amanhã — há mais à tua espera.
+            </p>
+          </div>
+        ) : null}
 
-            {/* Progress bar */}
-            <div style={{ marginBottom: "12px" }}>
-              <div
-                style={{
-                  height: "4px",
-                  borderRadius: "2px",
-                  background: "rgba(255,255,255,0.15)",
-                  overflow: "hidden",
-                }}
+        {/* O Teu Mundo Interior — universais */}
+        {licoesUniversais.length > 0 && (
+          <>
+            <div className="secao-header">
+              <p
+                className="font-editorial"
+                style={{ fontSize: "22px", fontWeight: 500, whiteSpace: "nowrap" }}
               >
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${(MISSAO.progresso / MISSAO.total) * 100}%`,
-                    borderRadius: "2px",
-                    background: MISSAO.cor,
-                  }}
-                />
-              </div>
-              <p style={{ fontSize: "11px", opacity: 0.5, marginTop: "4px" }}>
-                {MISSAO.progresso}/{MISSAO.total} questões
+                O Teu Mundo Interior
               </p>
-            </div>
-
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                background: MISSAO.cor,
-                color: MISSAO.corCard,
-                padding: "8px 16px",
-                borderRadius: "10px",
-                fontSize: "13px",
-                fontWeight: 800,
-              }}
-            >
-              Começar
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
-        </Link>
-
-        {/* Lições Universais — O teu mundo interior */}
-        <div
-          style={{
-            background: "rgba(255,255,255,0.6)",
-            borderRadius: "20px",
-            padding: "18px",
-            marginBottom: "20px",
-            border: "1px solid rgba(167,139,250,0.18)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-            <p
-              style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--texto-secundario)",
-                flex: 1,
-              }}
-            >
-              O teu mundo interior
-            </p>
-            <span
-              style={{
-                padding: "2px 8px",
-                borderRadius: "999px",
-                background: "rgba(167,139,250,0.12)",
-                color: "#534ab7",
-                fontSize: "10px",
-                fontWeight: 800,
-                letterSpacing: "0.04em",
-              }}
-            >
-              Universal
-            </span>
-          </div>
-          {LICOES_UNIVERSAIS.map((ex, i) => (
-            <Link key={ex.slug} href={`/licao/${ex.slug}/exercicios`}>
-              <div
-                className="card-hover"
+              <div className="secao-header-linha" />
+              <span
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "10px",
-                  borderRadius: "12px",
-                  background: ex.feito ? "rgba(74,222,128,0.06)" : "transparent",
-                  marginBottom: i < LICOES_UNIVERSAIS.length - 1 ? "6px" : 0,
+                  padding: "3px 10px",
+                  borderRadius: "999px",
+                  background: "rgba(167,139,250,0.12)",
+                  color: "#534ab7",
+                  fontSize: "10px",
+                  fontWeight: 800,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
                 }}
               >
-                <div
-                  style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "10px",
-                    background: `${ex.cor}20`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  {ex.feito ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M5 12L10 17L19 7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  ) : (
-                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: ex.cor }} />
-                  )}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: "14px", fontWeight: 700 }}>{ex.titulo}</p>
-                  <p style={{ fontSize: "11px", color: "var(--texto-secundario)", fontWeight: 600 }}>
-                    {ex.dimensao}
-                  </p>
-                </div>
-                {!ex.feito && (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 18L15 12L9 6" stroke="var(--texto-secundario)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
+                Universal
+              </span>
+            </div>
+            <div className="licoes-grid">
+              {licoesUniversais.map((licao) => (
+                <LicaoCard key={licao.id} licao={licao} />
+              ))}
+            </div>
+          </>
+        )}
 
-        {/* Lições Curriculares — As tuas matérias */}
-        <div
-          style={{
-            background: "rgba(255,255,255,0.6)",
-            borderRadius: "20px",
-            padding: "18px",
-            marginBottom: "20px",
-            border: "1px solid rgba(96,165,250,0.18)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-            <p
-              style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--texto-secundario)",
-                flex: 1,
-              }}
-            >
-              As tuas matérias
-            </p>
-            <span
-              style={{
-                padding: "2px 8px",
-                borderRadius: "999px",
-                background: "rgba(96,165,250,0.12)",
-                color: "#185fa5",
-                fontSize: "10px",
-                fontWeight: 800,
-                letterSpacing: "0.04em",
-              }}
-            >
-              Curricular
-            </span>
-          </div>
-          {LICOES_CURRICULARES.map((ex, i) => (
-            <Link key={ex.slug} href={`/licao/${ex.slug}/exercicios`}>
-              <div
-                className="card-hover"
+        {/* As Tuas Matérias — curriculares */}
+        {licoesCurriculares.length > 0 && (
+          <>
+            <div className="secao-header">
+              <p
+                className="font-editorial"
+                style={{ fontSize: "22px", fontWeight: 500, whiteSpace: "nowrap" }}
+              >
+                As Tuas Matérias
+              </p>
+              <div className="secao-header-linha" />
+              <span
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "10px",
-                  borderRadius: "12px",
-                  background: ex.feito ? "rgba(74,222,128,0.06)" : "transparent",
-                  marginBottom: i < LICOES_CURRICULARES.length - 1 ? "6px" : 0,
+                  padding: "3px 10px",
+                  borderRadius: "999px",
+                  background: "rgba(96,165,250,0.12)",
+                  color: "#185fa5",
+                  fontSize: "10px",
+                  fontWeight: 800,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
                 }}
               >
-                <div
-                  style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "10px",
-                    background: `${ex.cor}20`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  {ex.feito ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M5 12L10 17L19 7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  ) : (
-                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: ex.cor }} />
-                  )}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: "14px", fontWeight: 700 }}>{ex.titulo}</p>
-                  <p style={{ fontSize: "11px", color: "var(--texto-secundario)", fontWeight: 600 }}>
-                    {ex.dimensao}
-                  </p>
-                </div>
-                {!ex.feito && (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 18L15 12L9 6" stroke="var(--texto-secundario)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
+                {crianca?.curriculo ?? "Curricular"}
+              </span>
+            </div>
+            <div className="licoes-grid">
+              {licoesCurriculares.map((licao) => (
+                <LicaoCard key={licao.id} licao={licao} />
+              ))}
+            </div>
+          </>
+        )}
 
-        {/* Semana */}
-        <div
-          style={{
-            background: "rgba(255,255,255,0.6)",
-            borderRadius: "20px",
-            padding: "18px",
-            marginBottom: "20px",
-            border: "1px solid rgba(160,144,128,0.12)",
-          }}
-        >
+        {/* Esta semana */}
+        <div className="secao-header">
           <p
-            style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "var(--texto-secundario)",
-              marginBottom: "14px",
-            }}
+            className="font-editorial"
+            style={{ fontSize: "22px", fontWeight: 500, whiteSpace: "nowrap" }}
           >
             Esta semana
           </p>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="secao-header-linha" />
+          {estrelasSemana > 0 && (
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#854f0b",
+                background: "rgba(250,204,21,0.16)",
+                padding: "3px 10px",
+                borderRadius: "999px",
+                letterSpacing: "0.02em",
+              }}
+            >
+              ★ {estrelasSemana}
+            </span>
+          )}
+        </div>
+        <div
+          style={{
+            background: "rgba(255,255,255,0.6)",
+            borderRadius: "18px",
+            padding: "18px 22px",
+            border: "1px solid rgba(160,144,128,0.12)",
+          }}
+        >
+          <div className="semana-pills">
             {DIAS_SEMANA.map((dia, i) => {
               const isToday = i === HOJE_IDX;
-              const isDone = i < HOJE_IDX;
+              const isDone = diasSet.has(i);
               return (
-                <div key={dia} className="semana-dia">
+                <div key={dia} className="semana-pill">
                   <div
-                    className="semana-dia-circle"
+                    className="semana-pill-circle"
                     style={{
                       background: isDone
                         ? "#4ade80"
                         : isToday
-                        ? "var(--roxo-card)"
+                        ? "rgba(167,139,250,0.18)"
                         : "rgba(160,144,128,0.12)",
-                      color: isDone || isToday ? "white" : "var(--texto-secundario)",
+                      color: isDone
+                        ? "white"
+                        : isToday
+                        ? "var(--roxo-texto)"
+                        : "var(--texto-secundario)",
+                      border: isToday && !isDone ? "1.5px solid rgba(167,139,250,0.45)" : "none",
                     }}
                   >
                     {isDone ? (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 12L10 17L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path
+                          d="M5 12L10 17L19 7"
+                          stroke="white"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     ) : (
-                      <span style={{ fontSize: "11px", fontWeight: 800 }}>
-                        {isToday ? "•" : ""}
-                      </span>
+                      ""
                     )}
                   </div>
                   <span
                     style={{
-                      fontSize: "10px",
+                      fontSize: "11px",
                       fontWeight: 700,
                       color: isToday ? "var(--roxo-texto)" : "var(--texto-secundario)",
                     }}
@@ -664,146 +725,148 @@ export default function CriancaDashboardClient({
             })}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* Cofre semanal */}
+function LicaoCard({ licao }: { licao: LicaoDashboard }) {
+  const cor = safeCor(licao.cor);
+  const completa = licao.status === "completa";
+  const emCurso = licao.status === "em_curso";
+
+  return (
+    <Link href={`/licao/${licao.slug}/exercicios`} style={{ textDecoration: "none" }}>
+      <div className={`licao-card ${completa ? "completa" : ""}`}>
         <div
+          aria-hidden
           style={{
-            background: "linear-gradient(135deg, #2a1f0a 0%, #3a2d10 100%)",
-            borderRadius: "20px",
-            padding: "20px",
-            marginBottom: "20px",
-            color: "white",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "3px",
+            background: cor,
+            opacity: completa ? 0.55 : 1,
           }}
-        >
-          <p
-            style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              opacity: 0.5,
-              marginBottom: "10px",
-            }}
-          >
-            Cofre semanal
-          </p>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div
+        />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div className="licao-card-dot" style={{ background: cor }} />
+            <span
               style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "14px",
-                background: "rgba(250,204,21,0.2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                fontSize: "10px",
+                fontWeight: 800,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--texto-secundario)",
               }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              {licao.dimensao}
+            </span>
+          </div>
+          {licao.duracao_min ? (
+            <span
+              style={{
+                fontSize: "10px",
+                fontWeight: 700,
+                color: "var(--texto-secundario)",
+                background: "rgba(160,144,128,0.1)",
+                padding: "3px 8px",
+                borderRadius: "999px",
+              }}
+            >
+              {licao.duracao_min} min
+            </span>
+          ) : null}
+        </div>
+
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <h4
+            className="font-editorial"
+            style={{
+              fontSize: "22px",
+              fontWeight: 500,
+              lineHeight: 1.15,
+              marginTop: "10px",
+              marginBottom: "6px",
+              color: "var(--texto-principal)",
+            }}
+          >
+            {licao.titulo}
+          </h4>
+          {licao.subtitulo ? (
+            <p
+              style={{
+                fontSize: "12px",
+                color: "var(--texto-secundario)",
+                fontWeight: 600,
+                lineHeight: 1.4,
+              }}
+            >
+              {licao.subtitulo}
+            </p>
+          ) : null}
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {completa ? (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "11px",
+                fontWeight: 800,
+                color: "#2d5c3a",
+                letterSpacing: "0.04em",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
-                  d="M12 2L14.09 8.26L20.82 8.27L15.45 12.14L17.54 18.4L12 14.53L6.46 18.4L8.55 12.14L3.18 8.27L9.91 8.26L12 2Z"
-                  stroke="#facc15"
-                  strokeWidth="1.5"
+                  d="M5 12L10 17L19 7"
+                  stroke="#2d5c3a"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
-            </div>
-            <div>
-              <p style={{ fontSize: "22px", fontWeight: 900, color: "#facc15" }}>
-                {estrelasTotal} estrelas
-              </p>
-              <p style={{ fontSize: "12px", opacity: 0.5 }}>
-                Continua a explorar
-              </p>
-            </div>
-          </div>
-          <div
-            style={{
-              marginTop: "14px",
-              height: "6px",
-              borderRadius: "3px",
-              background: "rgba(255,255,255,0.1)",
-              overflow: "hidden",
-            }}
-          >
-            <div
+              Completa
+            </span>
+          ) : emCurso ? (
+            <span
               style={{
-                height: "100%",
-                width: "94%",
-                borderRadius: "3px",
-                background: "#facc15",
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Tarefas do dia */}
-        <div
-          style={{
-            background: "rgba(255,255,255,0.6)",
-            borderRadius: "20px",
-            padding: "18px",
-            border: "1px solid rgba(160,144,128,0.12)",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "var(--texto-secundario)",
-              marginBottom: "12px",
-            }}
-          >
-            Tarefas do dia
-          </p>
-          {TAREFAS.map((tarefa) => (
-            <div
-              key={tarefa.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "10px 0",
-                borderBottom: "1px solid rgba(160,144,128,0.08)",
+                fontSize: "11px",
+                fontWeight: 800,
+                color: cor,
+                letterSpacing: "0.04em",
               }}
             >
-              <div
-                style={{
-                  width: "20px",
-                  height: "20px",
-                  borderRadius: "6px",
-                  border: tarefa.feita
-                    ? `2px solid #4ade80`
-                    : `2px solid rgba(160,144,128,0.3)`,
-                  background: tarefa.feita ? "#4ade80" : "transparent",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {tarefa.feita && (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 12L10 17L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </div>
-              <p
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  textDecoration: tarefa.feita ? "line-through" : "none",
-                  opacity: tarefa.feita ? 0.5 : 1,
-                }}
-              >
-                {tarefa.texto}
-              </p>
-            </div>
-          ))}
+              Em curso
+            </span>
+          ) : (
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "var(--texto-secundario)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Começar
+            </span>
+          )}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M9 18L15 12L9 6"
+              stroke={completa ? "#2d5c3a" : "var(--texto-secundario)"}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
