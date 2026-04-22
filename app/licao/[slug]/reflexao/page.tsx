@@ -58,7 +58,9 @@ const EMOCOES = [
 
 interface Momento {
   momento_historico: string;
+  titulo?: string;
   para_crianca: string;
+  // Conteúdo destinado ao painel da família — NUNCA renderizar no ecrã da criança.
   para_adulto: string;
 }
 
@@ -107,13 +109,17 @@ function ReflexaoContent({ slug }: { slug: string }) {
     // Se a lição já tem momento curado na BD, usa-o directamente.
     const momentoBD = licao.momento?.crianca;
     if (momentoBD?.texto) {
+      const resumo = licao.momento?.adulto?.resumo_aprendizagem;
+      const paraAdulto = Array.isArray(resumo)
+        ? resumo.filter((s) => typeof s === "string" && s.trim().length > 0).join(" ")
+        : typeof resumo === "string"
+          ? resumo
+          : "";
       const adaptado: Momento = {
-        momento_historico: momentoBD.data ?? momentoBD.titulo ?? "",
+        momento_historico: momentoBD.data ?? "",
+        titulo: momentoBD.titulo,
         para_crianca: momentoBD.texto,
-        para_adulto:
-          licao.momento?.adulto?.resumo_aprendizagem ??
-          licao.momento?.adulto?.sugestao ??
-          "",
+        para_adulto: paraAdulto || licao.momento?.adulto?.sugestao || "",
       };
       setMomento(adaptado);
       setMomentoLoading(false);
@@ -580,37 +586,63 @@ function ReflexaoContent({ slug }: { slug: string }) {
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: "var(--texto-secundario)",
-                    marginBottom: "14px",
+                    marginBottom: momento.titulo ? "8px" : "14px",
                     opacity: 0.6,
                   }}
                 >
                   Um momento da história
                 </p>
 
-                <p
-                  className="font-editorial"
-                  style={{
-                    fontSize: "22px",
-                    fontStyle: "italic",
-                    fontWeight: 400,
-                    lineHeight: 1.5,
-                    color: "var(--texto-principal)",
-                    marginBottom: "14px",
-                  }}
-                >
-                  {momento.para_crianca}
-                </p>
+                {momento.titulo ? (
+                  <p
+                    className="font-editorial"
+                    style={{
+                      fontSize: "20px",
+                      fontStyle: "italic",
+                      fontWeight: 400,
+                      lineHeight: 1.4,
+                      color: "var(--texto-principal)",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    {momento.titulo}
+                  </p>
+                ) : null}
 
-                <p
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "var(--texto-secundario)",
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {momento.para_adulto}
-                </p>
+                {momento.para_crianca
+                  .split(/\n\s*\n+/)
+                  .map((p) => p.trim())
+                  .filter((p) => p.length > 0)
+                  .map((paragrafo, i) => (
+                    <p
+                      key={i}
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: 500,
+                        lineHeight: 1.7,
+                        color: "var(--texto-principal)",
+                        marginBottom: "14px",
+                      }}
+                    >
+                      {paragrafo}
+                    </p>
+                  ))}
+
+                {momento.momento_historico ? (
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: "var(--texto-secundario)",
+                      marginTop: "6px",
+                      opacity: 0.7,
+                    }}
+                  >
+                    {momento.momento_historico}
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </div>

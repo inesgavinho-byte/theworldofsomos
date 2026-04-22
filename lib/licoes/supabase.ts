@@ -27,7 +27,7 @@ export interface MomentoLicao {
     texto?: string;
   };
   adulto?: {
-    resumo_aprendizagem?: string;
+    resumo_aprendizagem?: string[];
     sugestao?: string;
   };
 }

@@ -6,7 +6,9 @@ import { getDimensaoBySlug } from "@/lib/dimensoes";
 
 interface Momento {
   momento_historico: string;
+  titulo?: string;
   para_crianca: string;
+  // Conteúdo destinado ao painel da família — NUNCA renderizar no ecrã da criança.
   para_adulto: string;
 }
 
@@ -151,6 +153,7 @@ export default function MomentoPage({ params }: PageProps) {
                 textAlign: "center",
                 marginBottom: "36px",
                 letterSpacing: "0.01em",
+                whiteSpace: "pre-line",
               }}
             >
               {momento.para_crianca}
@@ -167,34 +170,20 @@ export default function MomentoPage({ params }: PageProps) {
             />
 
             {/* Historical anchor */}
-            <p
-              style={{
-                fontSize: "12px",
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: `${dim.cor}70`,
-                textAlign: "center",
-                marginBottom: "8px",
-              }}
-            >
-              {momento.momento_historico}
-            </p>
-
-            {/* Adult context */}
-            <p
-              style={{
-                fontSize: "13px",
-                fontWeight: 600,
-                lineHeight: 1.7,
-                color: "rgba(255,255,255,0.45)",
-                textAlign: "center",
-                maxWidth: "420px",
-                margin: "0 auto",
-              }}
-            >
-              {momento.para_adulto}
-            </p>
+            {momento.momento_historico ? (
+              <p
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: `${dim.cor}70`,
+                  textAlign: "center",
+                }}
+              >
+                {momento.momento_historico}
+              </p>
+            ) : null}
           </>
         ) : (
           <p
