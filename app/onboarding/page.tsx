@@ -86,6 +86,17 @@ export default function OnboardingPage() {
       membro = { familia_id: novaFamilia.id };
     }
 
+    const { data: existente } = await supabase
+      .from("criancas")
+      .select("id, pin")
+      .eq("familia_id", membro.familia_id)
+      .maybeSingle();
+
+    if (existente?.id) {
+      router.push(existente.pin ? "/dashboard" : `/configurar-pin/${existente.id}`);
+      return;
+    }
+
     const { data: novaCrianca, error: insertError } = await supabase
       .from("criancas")
       .insert({
