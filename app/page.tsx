@@ -168,9 +168,9 @@ export default function LandingPage() {
                 }),
           }}
         >
-          O teu filho aprende matemática na escola.
+          Sabes o que o teu filho estudou esta semana.
           <br />
-          Aqui aprende quem é.
+          Mas sabes o que ele percebeu mesmo?
         </h1>
 
         <p
@@ -189,8 +189,8 @@ export default function LandingPage() {
                 }),
           }}
         >
-          Uma plataforma de desenvolvimento humano para crianças — construída à
-          volta do seu currículo, não contra ele.
+          Acompanhamento real do percurso escolar do teu filho — ligado ao
+          currículo, visível para ti, construído com ele.
         </p>
 
         <Link
@@ -278,7 +278,7 @@ export default function LandingPage() {
               margin: "0 0 14px",
             }}
           >
-            A escola tem o seu lugar. Nós temos o nosso.
+            O que acontece em cada sessão
           </p>
           <h2
             style={{
@@ -291,7 +291,7 @@ export default function LandingPage() {
               lineHeight: 1.25,
             }}
           >
-            Em cada sessão, a criança faz três coisas.
+            Em cada sessão, a criança aprende, é avaliada e cresce.
           </h2>
 
           <div
@@ -306,8 +306,8 @@ export default function LandingPage() {
             {[
               {
                 n: "01",
-                t: "Aprende algo que fica",
-                d: "Exercícios alinhados com o currículo — Cambridge, PT, IB, BNCC, FR. Mas mais fundo.",
+                t: "Aprende e é avaliada",
+                d: "Exercícios alinhados com o que está a estudar na escola. Cada erro é registado e reforçado automaticamente.",
               },
               {
                 n: "02",
@@ -316,8 +316,8 @@ export default function LandingPage() {
               },
               {
                 n: "03",
-                t: "Constrói o seu mapa",
-                d: "Cada sessão alimenta um registo único. Entregue aos 18 anos.",
+                t: "Tu vês tudo",
+                d: "O estado real do teu filho — o que percebeu, onde falhou, o que precisa de reforço. Em tempo real.",
               },
             ].map((card, i) => (
               <div
@@ -605,17 +605,11 @@ export default function LandingPage() {
               maxWidth: 480,
             }}
           >
-            <p style={{ margin: "0 0 14px" }}>
-              A minha filha Valentina passou por um sistema escolar que não foi
-              feito para ela. Não porque ela fosse menos — mas porque o sistema
-              não tem tempo para perguntar quem ela é.
-            </p>
-            <p style={{ margin: "0 0 14px" }}>
-              Procurei algo que a acompanhasse. Que complementasse a escola sem
-              a substituir. Que a ajudasse a ligar o que aprende ao que é.
-            </p>
             <p style={{ margin: 0 }}>
-              Não encontrei. Por isso construí o SOMOS.
+              A minha filha Valentina tem 9 anos. Está em Cambridge Year 4, em
+              Portugal. Esta semana estudou biografias e números primos. Sei o
+              que aprendeu — e o que ainda não percebeu bem. Construí o SOMOS
+              para que qualquer pai possa saber o mesmo sobre o seu filho.
             </p>
           </div>
         </div>
@@ -661,7 +655,7 @@ export default function LandingPage() {
               margin: "0 0 32px",
             }}
           >
-            Feito para famílias que vivem entre países, currículos e línguas.
+            Funciona com o currículo do teu filho, seja qual for.
           </h2>
 
           <div
@@ -737,7 +731,7 @@ export default function LandingPage() {
               lineHeight: 1.2,
             }}
           >
-            O fio 101 começa aqui.
+            O melhor momento para começar era ontem. O segundo melhor é agora.
           </h2>
           <p
             style={{
