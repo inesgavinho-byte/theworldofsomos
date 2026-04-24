@@ -224,7 +224,8 @@ export default function CosmosBackground({
     const spawnMeteor = (originX?: number, originY?: number) => {
       if (meteors.filter((m) => m.alive).length >= 9) return;
       const w = width;
-      const h = height;
+      const viewportH = window.innerHeight;
+      const scrollY = window.scrollY || window.pageYOffset || 0;
       const angleDeg = 28 + Math.random() * 34;
       const angle = (angleDeg * Math.PI) / 180;
       const speed = 9 + Math.random() * 13;
@@ -235,7 +236,7 @@ export default function CosmosBackground({
       const startY =
         originY !== undefined
           ? originY + (Math.random() - 0.5) * 40
-          : -20 + Math.random() * h * 0.3;
+          : scrollY - 20 + Math.random() * viewportH * 0.3;
       meteors.push({
         x: startX,
         y: startY,
@@ -254,8 +255,10 @@ export default function CosmosBackground({
       const delay = 8000 + Math.random() * 10000;
       showerTimeout = setTimeout(() => {
         const count = 4 + Math.floor(Math.random() * 2);
+        const scrollY = window.scrollY || window.pageYOffset || 0;
+        const viewportH = window.innerHeight;
         const originX = Math.random() * width * 0.7;
-        const originY = -10 + Math.random() * height * 0.2;
+        const originY = scrollY - 10 + Math.random() * viewportH * 0.2;
         for (let i = 0; i < count; i++) {
           setTimeout(
             () => spawnMeteor(originX, originY),
@@ -268,17 +271,22 @@ export default function CosmosBackground({
 
     const resize = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const w = wrapper.offsetWidth;
-      const h = wrapper.scrollHeight;
-      width = w;
-      height = h;
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      canvas.style.width = w + "px";
-      canvas.style.height = h + "px";
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.scale(dpr, dpr);
-      buildWorld(w, h);
+      const viewportW = window.innerWidth;
+      const viewportH = window.innerHeight;
+      const pageH = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        wrapper.scrollHeight,
+        viewportH
+      );
+      width = viewportW;
+      height = pageH;
+      canvas.width = Math.floor(viewportW * dpr);
+      canvas.height = Math.floor(viewportH * dpr);
+      canvas.style.width = viewportW + "px";
+      canvas.style.height = viewportH + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      buildWorld(viewportW, pageH);
     };
 
     const drawSparkle = (
@@ -311,7 +319,11 @@ export default function CosmosBackground({
 
     const render = () => {
       frameCount++;
-      ctx.clearRect(0, 0, width, height);
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const viewportH = window.innerHeight;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, viewportH);
+      ctx.translate(0, -scrollY);
 
       // Orbs (lowest layer)
       orbs.forEach((o) => {
@@ -564,7 +576,11 @@ export default function CosmosBackground({
     };
 
     const renderStatic = () => {
-      ctx.clearRect(0, 0, width, height);
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const viewportH = window.innerHeight;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, viewportH);
+      ctx.translate(0, -scrollY);
       orbs.forEach((o) => {
         const rgb = hexToRgb(o.color);
         const grad = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.rx);
@@ -623,15 +639,16 @@ export default function CosmosBackground({
       style={{
         position: "relative",
         background: "#f5f2ec",
-        overflow: "hidden",
       }}
     >
       <canvas
         ref={canvasRef}
         style={{
-          position: "absolute",
+          position: "fixed",
           top: 0,
           left: 0,
+          width: "100vw",
+          height: "100vh",
           pointerEvents: "none",
           zIndex: 0,
         }}
