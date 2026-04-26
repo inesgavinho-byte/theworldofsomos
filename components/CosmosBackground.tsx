@@ -172,7 +172,7 @@ export default function CosmosBackground({
           color: pick(PALETTE),
           radius: 1.4 + Math.random() * 2.2,
           phase: Math.random() * Math.PI * 2,
-          pulseSpeed: 0.012 + Math.random() * 0.02,
+          pulseSpeed: (0.012 + Math.random() * 0.02) * 1.4,
           floatSpeed: 0.004 + Math.random() * 0.008,
           floatAmp: 6 + Math.random() * 14,
         };
@@ -213,7 +213,7 @@ export default function CosmosBackground({
           floatSpeedY: 0.002 + Math.random() * 0.004,
           floatAmpX: 20 + Math.random() * 40,
           floatAmpY: 20 + Math.random() * 40,
-          pulseSpeed: 0.01 + Math.random() * 0.02,
+          pulseSpeed: (0.01 + Math.random() * 0.02) * 1.3,
         };
       });
 
@@ -347,7 +347,13 @@ export default function CosmosBackground({
         const alpha = Math.max(0.1, Math.min(1, s.opacity * pulse));
         if (s.sparkle) {
           s.rotation += s.rotSpeed;
-          drawSparkle(s.x, s.y, s.radius, s.color, alpha, s.rotation);
+          const sparkleAlpha = Math.max(0.1, Math.min(1, 0.5 + 0.5 * pulse));
+          const sparkleR = s.radius * (0.9 + 0.35 * pulse);
+          ctx.save();
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = s.color;
+          drawSparkle(s.x, s.y, sparkleR, s.color, sparkleAlpha, s.rotation);
+          ctx.restore();
         } else {
           const rgb = hexToRgb(s.color);
           ctx.beginPath();
@@ -375,7 +381,7 @@ export default function CosmosBackground({
           c.y,
           c.radius * 2.6
         );
-        halo.addColorStop(0, `rgba(${rgb.r},${rgb.g},${rgb.b},${0.12 * pulse})`);
+        halo.addColorStop(0, `rgba(${rgb.r},${rgb.g},${rgb.b},${0.22 * pulse})`);
         halo.addColorStop(1, `rgba(${rgb.r},${rgb.g},${rgb.b},0)`);
         ctx.fillStyle = halo;
         ctx.beginPath();
@@ -385,7 +391,7 @@ export default function CosmosBackground({
         // Core
         ctx.beginPath();
         ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${rgb.r},${rgb.g},${rgb.b},${0.28 * pulse})`;
+        ctx.fillStyle = `rgba(${rgb.r},${rgb.g},${rgb.b},${0.38 * pulse})`;
         ctx.fill();
       });
 
@@ -411,14 +417,18 @@ export default function CosmosBackground({
             const baseAlpha = (1 - dist / maxDist) * 0.14 * pulse;
             const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
             grad.addColorStop(0, `rgba(167,139,250,${baseAlpha})`);
-            grad.addColorStop(0.5, `rgba(196,181,253,${baseAlpha * 1.1})`);
+            grad.addColorStop(0.5, `rgba(196,181,253,${baseAlpha * 2.5})`);
             grad.addColorStop(1, `rgba(167,139,250,${baseAlpha})`);
+            ctx.save();
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = "#c4b5fd";
             ctx.beginPath();
             ctx.strokeStyle = grad;
-            ctx.lineWidth = 0.8;
+            ctx.lineWidth = 1.2;
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
             ctx.stroke();
+            ctx.restore();
 
             // Maybe spawn a spark along this edge
             if (
@@ -446,10 +456,10 @@ export default function CosmosBackground({
         const px = a.x + (b.x - a.x) * s.t;
         const py = a.y + (b.y - a.y) * s.t;
         ctx.save();
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 14;
         ctx.shadowColor = "#c4b5fd";
         ctx.beginPath();
-        ctx.arc(px, py, 1.6, 0, Math.PI * 2);
+        ctx.arc(px, py, 2.2, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(255,255,255,0.9)";
         ctx.fill();
         ctx.restore();
@@ -460,7 +470,7 @@ export default function CosmosBackground({
         const pulse = 0.6 + 0.4 * Math.sin(n.phase);
         const rgb = hexToRgb(n.color);
         ctx.save();
-        ctx.shadowBlur = 10 + 8 * pulse;
+        ctx.shadowBlur = 18 + 16 * pulse;
         ctx.shadowColor = n.color;
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
